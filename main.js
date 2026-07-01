@@ -442,7 +442,7 @@ function livelyAudioListener(audioArray) {
   // Beat shake: a quick positional kick that decays every frame
   shakeImpulse *= 0.85
   if (shakeImpulse > 0.001) {
-    let amt = shakeImpulse * 80
+    let amt = shakeImpulse * 120
     xPos += (Math.random() - 0.5) * amt
     yPos += (Math.random() - 0.5) * amt
   }

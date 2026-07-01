@@ -9,6 +9,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versioning is
 below live in Lively's **Customize** panel, grouped under the section headers
 named in each entry.
 
+## [0.4.1] — 2026-07-01
+### Changed
+- **Screen shake on beat** — increased the maximum shake magnitude by ~50% for a
+  harder hit at the top of the slider's range.
+
 ## [0.4.0] — 2026-07-01
 ### Added — Beat-reactive effects (Customize → "Beat-reactive:")
 - **Beat detection** — fires when the loudness spikes above a slow rolling
