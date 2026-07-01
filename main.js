@@ -54,10 +54,14 @@ let beatShake = 0 // positional kick on detected beats (0 = off)
 let shockwaveEnabled = false // expanding ripple ring from center on beats
 let reduceFlashing = false // accessibility: damp flashing / rapid motion
 
+let peakCaps = false // per-bar peak markers that hold, then fall under gravity
+
 let beatEnergyAvg = 0 // slow rolling loudness baseline for beat detection
 let beatCooldownFrames = 0 // min-gap counter so one beat doesn't double-trigger
 let shakeImpulse = 0 // decaying beat-shake magnitude
 let shockwaves = [] // active ripples: { radius, alpha }
+let peaks = [] // persistent per-bar peak value, aligned to `spectrum`
+const PEAK_GRAVITY = 0.01 // how far a peak marker falls per frame
 
 let globalRotation = 0 // accumulated rotation, radians
 let rainbowOffset = 0 // accumulated hue offset for the rainbow cycle
@@ -155,6 +159,8 @@ function linearMaxLen() {
 function drawCircle(spectrum, xPos, yPos, innerRadius, maxLength) {
   let audio = spectrum.slice().reverse().concat(spectrum)
   if (audio.length <= 2) return
+  // Mirror the peak buffer the same way so cap[index] lines up with audio[index]
+  let peakAudio = peakCaps ? peaks.slice().reverse().concat(peaks) : null
 
   ctx.lineWidth = ((barWidth / 100) * (2 * innerRadius * Math.PI)) / audio.length
   let innerOffset = average * maxLength * (innerMovement / 100)
@@ -182,6 +188,18 @@ function drawCircle(spectrum, xPos, yPos, innerRadius, maxLength) {
       ctx.moveTo(0, inner)
       ctx.lineTo(0, outer)
       ctx.stroke()
+
+      if (peakCaps) {
+        let capBase = peakAudio[index] * maxLength + inner
+        let capColor = `hsl(${barHue(halfRatio, ratio)}, ${saturation}%, ${Math.min(95, lightness + 35)}%)`
+        ctx.strokeStyle = capColor
+        ctx.shadowColor = capColor
+        ctx.beginPath()
+        ctx.moveTo(0, capBase)
+        ctx.lineTo(0, capBase + 6)
+        ctx.stroke()
+      }
+
       ctx.setTransform(1, 0, 0, 1, 0, 0)
     })
   }
@@ -218,6 +236,21 @@ function drawLinearBars(spectrum, xPos, yPos, mirrorBars) {
       ctx.lineTo(x, baseY - len)
     }
     ctx.stroke()
+
+    if (peakCaps) {
+      let pl = peaks[i] * maxLen
+      let capColor = `hsl(${hue}, ${saturation}%, ${Math.min(95, lightness + 35)}%)`
+      ctx.strokeStyle = capColor
+      ctx.shadowColor = capColor
+      ctx.beginPath()
+      ctx.moveTo(x, baseY - pl)
+      ctx.lineTo(x, baseY - pl - 6)
+      if (mirrorBars) {
+        ctx.moveTo(x, baseY + pl)
+        ctx.lineTo(x, baseY + pl + 6)
+      }
+      ctx.stroke()
+    }
   }
 }
 
@@ -324,6 +357,19 @@ function drawBarsOnEdge(spectrum, edge, flip) {
     ctx.moveTo(x0, y0)
     ctx.lineTo(x1, y1)
     ctx.stroke()
+
+    if (peakCaps) {
+      let pd = peaks[i] * g.maxDepth
+      let [cx0, cy0] = g.pt(a, pd)
+      let [cx1, cy1] = g.pt(a, pd + 6)
+      let capColor = `hsl(${barHue(ratio, ratio)}, ${saturation}%, ${Math.min(95, lightness + 35)}%)`
+      ctx.strokeStyle = capColor
+      ctx.shadowColor = capColor
+      ctx.beginPath()
+      ctx.moveTo(cx0, cy0)
+      ctx.lineTo(cx1, cy1)
+      ctx.stroke()
+    }
   }
 }
 
@@ -408,6 +454,13 @@ function livelyAudioListener(audioArray) {
   spectrum = spectrum.map((elem, idx, arr) => {
     return elem * (idx / arr.length + (100 - compensation + 50) / 100)
   })
+
+  // Peak caps: hold each bar's max, then let the marker fall under gravity.
+  if (peaks.length !== spectrum.length) peaks = spectrum.slice()
+  for (let i = 0; i < spectrum.length; i++) {
+    if (spectrum[i] >= peaks[i]) peaks[i] = spectrum[i]
+    else peaks[i] = Math.max(spectrum[i], peaks[i] - PEAK_GRAVITY)
+  }
 
   let innerRadius = (ctx.canvas.height / 2) * (innerPercent / 100)
   let maxLength = (ctx.canvas.height / 2 - innerRadius) * (barPercent / 100)
@@ -738,6 +791,9 @@ function livelyPropertyListener(name, val) {
       break
     case "reduceFlashing":
       reduceFlashing = val
+      break
+    case "peakCaps":
+      peakCaps = val
       break
     case "barCompensation":
       compensation = val

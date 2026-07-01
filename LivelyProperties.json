@@ -144,6 +144,11 @@
     "value": true,
     "text": "Rounded bars"
   },
+  "peakCaps": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Peak caps (falling markers)"
+  },
   "innerRadius": {
     "max": 90,
     "min": 0,
