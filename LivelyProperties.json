@@ -19,6 +19,47 @@
     "type": "slider",
     "value": 0
   },
+  "slideshowLabel": {
+    "type": "label",
+    "value": "Background slideshow:"
+  },
+  "slideshowEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Cycle through images folder"
+  },
+  "slideshowInterval": {
+    "max": 600,
+    "min": 3,
+    "tick": 25,
+    "step": 1,
+    "text": "Seconds per image",
+    "type": "slider",
+    "value": 30
+  },
+  "slideshowShuffle": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Shuffle order"
+  },
+  "slideshowFade": {
+    "max": 10,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Crossfade seconds",
+    "type": "slider",
+    "value": 2
+  },
+  "bgDim": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Background dim",
+    "type": "slider",
+    "value": 0
+  },
   "useMiddleImage": {
     "type": "checkbox",
     "value": false,
@@ -40,9 +81,36 @@
     "type": "slider",
     "value": 95
   },
+  "logoXPercent": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Center image horizontal position",
+    "type": "slider",
+    "value": 50
+  },
+  "logoYPercent": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Center image vertical position",
+    "type": "slider",
+    "value": 50
+  },
   "barLabel": {
     "type": "label",
     "value": "Bars:"
+  },
+  "barCount": {
+    "max": 256,
+    "min": 16,
+    "tick": 25,
+    "step": 2,
+    "text": "Number of bars",
+    "type": "slider",
+    "value": 128
   },
   "maxLength": {
     "max": 500,
@@ -103,9 +171,145 @@
     "type": "slider",
     "value": 25
   },
+  "vizMode": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Visualizer mode",
+    "items": [
+      "Circle",
+      "Bottom bars",
+      "Mirrored bars",
+      "Spectrum line",
+      "Filled area"
+    ]
+  },
+  "symmetry": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Kaleidoscope segments (circle only)",
+    "items": [
+      "Off",
+      "2",
+      "3",
+      "4",
+      "6",
+      "8"
+    ]
+  },
+  "edgeMirror": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Edge mirror (bar modes only)",
+    "items": [
+      "Off",
+      "Top + bottom",
+      "Left + right",
+      "All 4 sides"
+    ]
+  },
+  "motionLabel": {
+    "type": "label",
+    "value": "Motion & reactivity:"
+  },
+  "smoothing": {
+    "max": 95,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Smoothing (less jumpy)",
+    "type": "slider",
+    "value": 40
+  },
+  "rotationSpeed": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Constant rotation speed",
+    "type": "slider",
+    "value": 0
+  },
+  "beatPulse": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Beat pulse (scale on loud)",
+    "type": "slider",
+    "value": 0
+  },
+  "autoHideThreshold": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Auto-hide on silence",
+    "type": "slider",
+    "value": 0
+  },
+  "beatLabel": {
+    "type": "label",
+    "value": "Beat-reactive:"
+  },
+  "beatSensitivity": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Beat sensitivity",
+    "type": "slider",
+    "value": 50
+  },
+  "bassIsolation": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Bass isolation (kick focus)",
+    "type": "slider",
+    "value": 0
+  },
+  "beatShake": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Screen shake on beat",
+    "type": "slider",
+    "value": 0
+  },
+  "shockwave": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Shockwave ripple on beat"
+  },
+  "reduceFlashing": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Reduce flashing (accessibility)"
+  },
   "colorLabel": {
     "type": "label",
     "value": "Colors:"
+  },
+  "colorMode": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Color mode",
+    "items": [
+      "Static gradient",
+      "Rainbow cycle",
+      "Volume-reactive"
+    ]
+  },
+  "rainbowSpeed": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Rainbow / shift speed",
+    "type": "slider",
+    "value": 30
   },
   "startHue": {
     "max": 360,
@@ -142,6 +346,11 @@
     "text": "Color lightness",
     "type": "slider",
     "value": 50
+  },
+  "barGradient": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Gradient along each bar"
   },
   "shakeLabel": {
     "type": "label",
