@@ -5,9 +5,13 @@ of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-a
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
 
+## [0.4.3]: 2026-07-01
+### Added
+- **Peak fall speed** slider: controls how fast the peak markers drop.
+
 ## [0.4.2]: 2026-07-01
 ### Added
-- **Peak caps (falling markers)** checkbox (Customize → "Bars:") — each bar gets
+- **Peak caps (falling markers)** checkbox (Customize → "Bars:"): each bar gets
   a marker that jumps to its peak and then falls under gravity. Works in the
   circle, bottom/mirrored bar, and edge-mirror modes (not the line/area modes,
   which have no discrete bars).

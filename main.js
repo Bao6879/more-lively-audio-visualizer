@@ -61,7 +61,7 @@ let beatCooldownFrames = 0 // min-gap counter so one beat doesn't double-trigger
 let shakeImpulse = 0 // decaying beat-shake magnitude
 let shockwaves = [] // active ripples: { radius, alpha }
 let peaks = [] // persistent per-bar peak value, aligned to `spectrum`
-const PEAK_GRAVITY = 0.01 // how far a peak marker falls per frame
+let peakGravity = 0.01 // how far a peak marker falls per frame (set via "Peak fall speed")
 
 let globalRotation = 0 // accumulated rotation, radians
 let rainbowOffset = 0 // accumulated hue offset for the rainbow cycle
@@ -459,7 +459,7 @@ function livelyAudioListener(audioArray) {
   if (peaks.length !== spectrum.length) peaks = spectrum.slice()
   for (let i = 0; i < spectrum.length; i++) {
     if (spectrum[i] >= peaks[i]) peaks[i] = spectrum[i]
-    else peaks[i] = Math.max(spectrum[i], peaks[i] - PEAK_GRAVITY)
+    else peaks[i] = Math.max(spectrum[i], peaks[i] - peakGravity)
   }
 
   let innerRadius = (ctx.canvas.height / 2) * (innerPercent / 100)
@@ -794,6 +794,9 @@ function livelyPropertyListener(name, val) {
       break
     case "peakCaps":
       peakCaps = val
+      break
+    case "peakGravity":
+      peakGravity = val / 1000
       break
     case "barCompensation":
       compensation = val

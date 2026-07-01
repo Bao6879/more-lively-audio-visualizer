@@ -149,6 +149,15 @@
     "value": false,
     "text": "Peak caps (falling markers)"
   },
+  "peakGravity": {
+    "max": 70,
+    "min": 1,
+    "tick": 25,
+    "step": 1,
+    "text": "Peak fall speed",
+    "type": "slider",
+    "value": 10
+  },
   "innerRadius": {
     "max": 90,
     "min": 0,
