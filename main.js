@@ -113,6 +113,30 @@ function shockOrigin(idx, w, h, cx, cy) {
 let peaks = [] // persistent per-bar peak value, aligned to `spectrum`
 let peakGravity = 0.01 // how far a peak marker falls per frame (set via "Peak fall speed")
 
+// --- Batch 7: more energy & reactivity --------------------------------------
+// Beat flash: a full-screen colour flash on each beat (DOM overlay #beat-flash),
+// above the background but below the visualizer. Reduce flashing kills it.
+let beatFlashEnabled = false
+let beatFlashColor = "#ffffff"
+let beatFlashStrength = 60 // peak flash opacity (0-100)
+let flashLevel = 0 // current, decaying flash opacity
+
+// Teleport on beat: instead of vibrating in place, the ring jumps to a new spot
+// on each beat and stays there until the next one (distinct from beatShake).
+let beatTeleport = false
+let teleportX = 0.5 // current teleport target as a fraction of width/height
+let teleportY = 0.5
+
+// Peak fly-off: when a bar spikes up hard/fast, its peak cap launches off toward
+// the screen edge, leaving a fading streak. Independent of the falling peakCaps.
+let peakFlyOff = false
+let peakFlySensitivity = 50 // higher = a smaller jump triggers a fly-off
+let peakFlySpeed = 50 // how fast a launched cap flies off (0-100)
+let flyingCaps = [] // active streaks: { x, y, vx, vy, age, life, hue }
+let flyTrigger = [] // per-band: did this bar spike hard enough this frame
+let flyCooldown = [] // per-band cooldown frames so a held-loud bar doesn't spam
+let prevSpectrum = [] // last frame's spectrum, for spike detection
+
 let globalRotation = 0 // accumulated rotation, radians
 let rainbowOffset = 0 // accumulated hue offset for the rainbow cycle
 let smoothedAudio = [] // persistent buffer for bar smoothing
@@ -123,6 +147,17 @@ const middle = document.getElementById("middle")
 const canvas = document.getElementById("canvas")
 const visualizer = document.getElementById("visualizer")
 const starfield = document.getElementById("starfield")
+const beatFlash = document.getElementById("beat-flash")
+
+// Batch 7: launch a peak cap streak from (x,y) heading in direction (dx,dy).
+// Speed is fixed; the streak fades over its short life. Capped so a wall of
+// spikes can't grow the array unbounded.
+function spawnFlyCap(x, y, dx, dy, hue) {
+  let len = Math.hypot(dx, dy) || 1
+  let speed = 5 + (peakFlySpeed / 100) * 27 // ~5–32 px/frame
+  flyingCaps.push({ x, y, vx: (dx / len) * speed, vy: (dy / len) * speed, age: 0, life: 34, hue })
+  if (flyingCaps.length > 200) flyingCaps.shift()
+}
 
 // ----------------------------------------------------------------------------
 // Batch 5: GPU warp (WebGL droplet ripples)
@@ -412,6 +447,17 @@ function drawCircle(spectrum, xPos, yPos, innerRadius, maxLength) {
       ctx.lineTo(0, outer)
       ctx.stroke()
 
+      // Peak fly-off: spawn once per band (segment 0 only) at the bar tip,
+      // heading radially outward. sideIdx maps the mirrored ring index back to
+      // the single-sided spectrum/flyTrigger index.
+      if (peakFlyOff && s === 0) {
+        let sideIdx = index < arr.length / 2 ? Math.floor(arr.length / 2) - 1 - index : index - Math.floor(arr.length / 2)
+        if (flyTrigger[sideIdx]) {
+          let th = segBase + a * segAngle
+          spawnFlyCap(xPos - outer * Math.sin(th), yPos + outer * Math.cos(th), -Math.sin(th), Math.cos(th), barHue(halfRatio, ratio))
+        }
+      }
+
       if (peakCaps) {
         let capBase = peakAudio[index] * maxLength + inner
         let capColor = `hsl(${barHue(halfRatio, ratio)}, ${saturation}%, ${Math.min(95, lightness + 35)}%)`
@@ -459,6 +505,11 @@ function drawLinearBars(spectrum, xPos, yPos, mirrorBars) {
       ctx.lineTo(x, baseY - len)
     }
     ctx.stroke()
+
+    if (peakFlyOff && flyTrigger[i]) {
+      spawnFlyCap(x, baseY - len, 0, -1, hue)
+      if (mirrorBars) spawnFlyCap(x, baseY + len, 0, 1, hue)
+    }
 
     if (peakCaps) {
       let pl = peaks[i] * maxLen
@@ -581,6 +632,12 @@ function drawBarsOnEdge(spectrum, edge, flip) {
     ctx.lineTo(x1, y1)
     ctx.stroke()
 
+    // Fly-off heads back toward the edge (depth 0), the opposite of inward growth
+    if (peakFlyOff && flyTrigger[i]) {
+      let [ex, ey] = g.pt(a, 0)
+      spawnFlyCap(x1, y1, ex - x1, ey - y1, barHue(ratio, ratio))
+    }
+
     if (peakCaps) {
       let pd = peaks[i] * g.maxDepth
       let [cx0, cy0] = g.pt(a, pd)
@@ -685,6 +742,24 @@ function livelyAudioListener(audioArray) {
     else peaks[i] = Math.max(spectrum[i], peaks[i] - peakGravity)
   }
 
+  // Peak fly-off: flag any band that jumped up hard enough this frame. The draw
+  // functions read flyTrigger[] and launch a streak from that bar's tip.
+  if (peakFlyOff) {
+    if (flyCooldown.length !== spectrum.length) flyCooldown = new Array(spectrum.length).fill(0)
+    if (flyTrigger.length !== spectrum.length) flyTrigger = new Array(spectrum.length).fill(false)
+    if (prevSpectrum.length !== spectrum.length) prevSpectrum = spectrum.slice()
+    let rise = 0.28 - (peakFlySensitivity / 100) * 0.22 // higher sensitivity -> smaller jump triggers
+    for (let i = 0; i < spectrum.length; i++) {
+      flyTrigger[i] = false
+      if (flyCooldown[i] > 0) flyCooldown[i]--
+      if (flyCooldown[i] === 0 && spectrum[i] > 0.22 && spectrum[i] - prevSpectrum[i] > rise) {
+        flyTrigger[i] = true
+        flyCooldown[i] = 2 // short gap so a sustained rise can stack several caps in flight
+      }
+    }
+    prevSpectrum = spectrum.slice()
+  }
+
   let innerRadius = (ctx.canvas.height / 2) * (innerPercent / 100)
   let maxLength = (ctx.canvas.height / 2 - innerRadius) * (barPercent / 100)
 
@@ -692,10 +767,14 @@ function livelyAudioListener(audioArray) {
   ctx.lineCap = roundedBars ? "round" : "butt"
   ctx.shadowBlur = glow
 
-  // Visualizer location (+ shake/wobble)
-  let xPos = ctx.canvas.width * (xPercent / 100)
+  // Visualizer location (+ shake/wobble). Teleport-on-beat overrides the base
+  // position with the current teleport target (set on the last beat) so the ring
+  // sits at a new spot instead of following the location sliders.
+  let xFrac = beatTeleport ? teleportX : xPercent / 100
+  let yFrac = beatTeleport ? teleportY : yPercent / 100
+  let xPos = ctx.canvas.width * xFrac
   xPos += (noise(axis) - 0.5) * ((innerRadius * movementRadius) / 100)
-  let yPos = ctx.canvas.height * (yPercent / 100)
+  let yPos = ctx.canvas.height * yFrac
   yPos += (noise(0, axis) - 0.5) * ((innerRadius * movementRadius) / 100)
   axis += average * (movementSpeed / 100)
 
@@ -718,6 +797,12 @@ function livelyAudioListener(audioArray) {
       let startDist = o.center && shockwaveShape === 0 ? innerRadius : 0
       shockwaves.push({ ox: o.ox, oy: o.oy, dx: o.dx, dy: o.dy, center: !!o.center, dist: startDist, a0: 0.6 * flashK, age: 0 })
     }
+    // Teleport on beat: pick a new spot, kept inside a margin so the ring stays
+    // fully on-screen. Applied from the next frame on (see xFrac/yFrac above).
+    if (beatTeleport) {
+      teleportX = 0.12 + Math.random() * 0.76
+      teleportY = 0.14 + Math.random() * 0.72
+    }
     // Kick off a contract/release pulse from the visualizer center
     if (warpEnabled && gl) {
       warpRipples.push({ f: 0, strength: flashK })
@@ -731,6 +816,19 @@ function livelyAudioListener(audioArray) {
     let amt = shakeImpulse * 120
     xPos += (Math.random() - 0.5) * amt
     yPos += (Math.random() - 0.5) * amt
+  }
+
+  // Beat flash: pop the overlay to full strength on a beat, then decay. Reduce
+  // flashing disables it outright — it's a strobe by definition, not just motion.
+  if (beatFlashEnabled && !reduceFlashing) {
+    if (isBeat) flashLevel = Math.max(flashLevel, beatFlashStrength / 100)
+    flashLevel *= 0.82
+    if (flashLevel < 0.01) flashLevel = 0
+    beatFlash.style.backgroundColor = beatFlashColor
+    beatFlash.style.opacity = flashLevel
+  } else if (flashLevel !== 0) {
+    flashLevel = 0
+    beatFlash.style.opacity = 0
   }
 
   // Beat zoom: the background swells on a beat, then eases back to normal.
@@ -801,6 +899,33 @@ function livelyAudioListener(audioArray) {
       case 4:
         drawSpectrumLine(spectrum, xPos, yPos, true)
         break
+    }
+  }
+
+  // Peak fly-off streaks: advance each launched cap, draw a short fading trail
+  // behind it, and retire it once it fades or leaves the screen. Runs regardless
+  // of the current toggle so in-flight streaks finish cleanly after it's turned off.
+  if (flyingCaps.length) {
+    ctx.lineCap = "round"
+    ctx.shadowBlur = glow
+    for (let i = flyingCaps.length - 1; i >= 0; i--) {
+      let c = flyingCaps[i]
+      c.x += c.vx
+      c.y += c.vy
+      c.age++
+      let lifeK = 1 - c.age / c.life
+      if (lifeK <= 0 || c.x < -60 || c.x > ctx.canvas.width + 60 || c.y < -60 || c.y > ctx.canvas.height + 60) {
+        flyingCaps.splice(i, 1)
+        continue
+      }
+      let color = `hsla(${c.hue}, ${saturation}%, ${Math.min(95, lightness + 30)}%, ${lifeK})`
+      ctx.strokeStyle = color
+      ctx.shadowColor = `hsl(${c.hue}, ${saturation}%, ${Math.min(95, lightness + 30)}%)`
+      ctx.lineWidth = 3 * lifeK + 1
+      ctx.beginPath()
+      ctx.moveTo(c.x, c.y)
+      ctx.lineTo(c.x - c.vx * 2.5, c.y - c.vy * 2.5) // trail opposite travel
+      ctx.stroke()
     }
   }
 
@@ -1173,11 +1298,32 @@ function livelyPropertyListener(name, val) {
     case "reduceFlashing":
       reduceFlashing = val
       break
+    case "beatFlashEnabled":
+      beatFlashEnabled = val
+      break
+    case "beatFlashColor":
+      beatFlashColor = val
+      break
+    case "beatFlashStrength":
+      beatFlashStrength = val
+      break
+    case "beatTeleport":
+      beatTeleport = val
+      break
     case "peakCaps":
       peakCaps = val
       break
     case "peakGravity":
       peakGravity = val / 1000
+      break
+    case "peakFlyOff":
+      peakFlyOff = val
+      break
+    case "peakFlySensitivity":
+      peakFlySensitivity = val
+      break
+    case "peakFlySpeed":
+      peakFlySpeed = val
       break
     case "warpEnabled":
       warpEnabled = val

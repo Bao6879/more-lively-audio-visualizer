@@ -66,6 +66,19 @@
             z-index: -10;
         }
 
+        /* Beat flash (Batch 7): a full-screen colour flash on the beat. Sits
+           above the background/starfield but below the visualizer. Screen blend
+           so it reads as a light burst over the background. Reduce flashing
+           turns it off entirely (it's a strobe by definition). */
+        #beat-flash {
+            position: absolute;
+            inset: 0;
+            z-index: -5;
+            opacity: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
         /* GPU warp overlay: sits exactly over #canvas, hidden until warp fires */
         #glcanvas {
             position: absolute;
@@ -111,6 +124,9 @@
     <div id="dim-overlay"></div>
 
     <canvas id="starfield"></canvas>
+
+    <!-- Beat flash overlay (Batch 7). Colour + opacity driven from main.js. -->
+    <div id="beat-flash"></div>
 
     <div id="visualizer">
         <img id="middle" />

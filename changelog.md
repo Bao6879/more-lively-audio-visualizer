@@ -4,6 +4,28 @@ All notable changes to this fork are documented here. This is an extended fork
 of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-audio-visualizer),
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
+## [0.7.0]: 2026-07-02
+### Added: More energy & reactivity (Batch 7, part 1)
+The three self-contained effects of Batch 7. The two fork-borrowed ideas
+(background-on-beat, starfield-on-beat) are deferred until we have the
+attribution to credit in the UI.
+- **Beat flash** (Customize → beat section): a **Beat flash** checkbox, a
+  **Beat flash color** picker, and a **Beat flash strength** slider. On each
+  detected beat a full-screen colour flash pops above the background (screen
+  blend) and behind the visualizer, then decays. 
+- **Reduce flashing disables it entirely**: it's a strobe by definition, not just motion.
+- **Teleport on beat** (Customize → beat section): a **Teleport on beat**
+  checkbox. Instead of vibrating in place (Screen shake), the visualizer jumps
+  to a new on-screen spot on each beat and holds there until the next one. Kept
+  within a margin so the ring stays fully visible.
+- **Peak fly-off** (Customize → "Bars:"): a **Peak fly-off** checkbox +
+  **Peak fly-off sensitivity** slider. When a bar spikes up fast enough its peak
+  cap launches off toward the screen edge, leaving a short fading streak.
+  Independent of the falling **Peak caps**; A per-band cooldown stops a held-loud bar from spraying streaks.
+- **Peak fly-off speed** slider (Customize → "Bars:"): controls how fast a
+  launched cap flies off .
+### Changed
+- **Peak fly-off** now lets a single bar stack multiple caps in flight.
 
 ## [0.6.1]: 2026-07-02
 ### Added: Background extras, part 2 (Batch 6 complete)
