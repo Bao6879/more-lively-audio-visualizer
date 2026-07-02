@@ -78,6 +78,18 @@
     "type": "slider",
     "value": 40
   },
+  "videoBgEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Video background (heavy — loops muted)"
+  },
+  "videoBg": {
+    "type": "folderDropdown",
+    "value": "",
+    "text": "Background video",
+    "filter": "*.mp4|*.webm",
+    "folder": "videos"
+  },
   "useMiddleImage": {
     "type": "checkbox",
     "value": false,
@@ -313,7 +325,60 @@
   "shockwave": {
     "type": "checkbox",
     "value": false,
-    "text": "Shockwave ripple on beat"
+    "text": "Shockwave on beat"
+  },
+  "shockwaveShape": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Shockwave shape",
+    "items": [
+      "Ring",
+      "Line"
+    ]
+  },
+  "shockwaveOrigin": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Shockwave origin",
+    "items": [
+      "Center",
+      "Top",
+      "Bottom",
+      "Left",
+      "Right",
+      "Top-left",
+      "Top-right",
+      "Bottom-left",
+      "Bottom-right",
+      "Random"
+    ]
+  },
+  "shockwaveThickness": {
+    "max": 20,
+    "min": 1,
+    "tick": 25,
+    "step": 1,
+    "text": "Shockwave thickness",
+    "type": "slider",
+    "value": 3
+  },
+  "shockwaveDuration": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shockwave duration",
+    "type": "slider",
+    "value": 40
+  },
+  "shockwaveSpeed": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shockwave speed",
+    "type": "slider",
+    "value": 40
   },
   "reduceFlashing": {
     "type": "checkbox",

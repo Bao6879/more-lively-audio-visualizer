@@ -5,6 +5,23 @@ of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-a
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
 
+## [0.6.1]: 2026-07-02
+### Added: Background extras, part 2 (Batch 6 complete)
+- **Video background (heavy)**: a **Video background** checkbox + **Background
+  video** dropdown (Customize → "Background extras:"). Drop `.mp4`/`.webm` files
+  in a new `videos/` folder, run `generate-playlist.bat`, and pick one; it loops
+  muted behind everything. Sits inside the background wrapper, so **background
+  blur and beat zoom apply to it too**.
+- **Current Video Credit**: https://pixabay.com/videos/sunset-blender-mountains-river-3d-65182/
+- **Shockwave, reworked** (Customize → beat section): the old fixed centered
+  ring is now fully configurable:
+  - **Shockwave shape**: Ring (expanding circle) or Line (a straight bar that
+    sweeps across the screen).
+  - **Shockwave origin**: Center / the four sides / the four corners / Random.
+    Edge and corner origins send the wave sweeping in from that edge; the Center
+    line sweeps out both ways.
+  - **Shockwave thickness**, **duration**, and **speed** sliders.
+
 ## [0.6.0]: 2026-07-02
 ### Added: Background extras, part 1 (Customize → "Background extras:")
 First slice of Batch 6.

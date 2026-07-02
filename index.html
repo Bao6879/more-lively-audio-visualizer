@@ -40,6 +40,17 @@
             opacity: 1;
         }
 
+        /* Video background (Batch 6). Lives inside #bg-layers so blur + beat-zoom
+           apply to it too. Hidden until a video is selected + enabled. */
+        #bg-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
         /* Darkening overlay between the background and the starfield */
         #dim-overlay {
             position: absolute;
@@ -94,6 +105,7 @@
     <div id="bg-layers">
         <div class="bg-layer" id="bgA"></div>
         <div class="bg-layer" id="bgB"></div>
+        <video id="bg-video" muted loop autoplay playsinline></video>
     </div>
 
     <div id="dim-overlay"></div>
@@ -115,6 +127,9 @@
          script tag on purpose: fetch() of local files is unreliable under file://,
          a script tag is not. Defines window.SLIDESHOW_FILES. -->
     <script src="images/playlist.js"></script>
+    <!-- Video background list (regenerate with generate-playlist.bat). Same
+         script-tag pattern as the image playlist; defines window.VIDEO_FILES. -->
+    <script src="videos/playlist.js"></script>
 
     <script src="noise.js"></script>
     <script src="main.js"></script>

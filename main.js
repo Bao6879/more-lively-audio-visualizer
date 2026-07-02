@@ -51,7 +51,12 @@ let edgeMirror = 0 // bar modes only: 0 off, 1 top+bottom, 2 left+right, 3 all f
 let beatSensitivity = 50 // higher = triggers beats more readily
 let bassIsolation = 0 // 0 = react to whole spectrum, 100 = only the low bands
 let beatShake = 0 // positional kick on detected beats (0 = off)
-let shockwaveEnabled = false // expanding ripple ring from center on beats
+let shockwaveEnabled = false // expanding ripple from an origin on beats
+let shockwaveOrigin = 0 // 0 center, 1-4 sides, 5-8 corners, 9 random
+let shockwaveShape = 0 // 0 = ring (expanding circle), 1 = line (sweeping bar)
+let shockwaveThickness = 3 // stroke width in px
+let shockwaveDuration = 40 // how long each wave lives (0-100 → frames)
+let shockwaveSpeed = 40 // how fast it travels (0-100 → px/frame)
 let reduceFlashing = false // accessibility: damp flashing / rapid motion
 
 let peakCaps = false // per-bar peak markers that hold, then fall under gravity
@@ -85,7 +90,26 @@ let glitchSeed = 0 // reshuffled each beat so slice bands change
 let beatEnergyAvg = 0 // slow rolling loudness baseline for beat detection
 let beatCooldownFrames = 0 // min-gap counter so one beat doesn't double-trigger
 let shakeImpulse = 0 // decaying beat-shake magnitude
-let shockwaves = [] // active ripples: { radius, alpha }
+let shockwaves = [] // active waves: { ox, oy, dx, dy, center, dist, a0, age }
+
+// Resolve a shockwave origin index to a point (ox,oy) plus a travel direction
+// (dx,dy) used by the Line shape. `center` flags the middle origin, which sweeps
+// out both ways. cx/cy are the live visualizer center (used by the Center origin).
+const SQRT1_2 = Math.SQRT1_2
+function shockOrigin(idx, w, h, cx, cy) {
+  switch (idx) {
+    case 1: return { ox: w / 2, oy: 0, dx: 0, dy: 1 } // top → sweeps down
+    case 2: return { ox: w / 2, oy: h, dx: 0, dy: -1 } // bottom → up
+    case 3: return { ox: 0, oy: h / 2, dx: 1, dy: 0 } // left → right
+    case 4: return { ox: w, oy: h / 2, dx: -1, dy: 0 } // right → left
+    case 5: return { ox: 0, oy: 0, dx: SQRT1_2, dy: SQRT1_2 } // top-left
+    case 6: return { ox: w, oy: 0, dx: -SQRT1_2, dy: SQRT1_2 } // top-right
+    case 7: return { ox: 0, oy: h, dx: SQRT1_2, dy: -SQRT1_2 } // bottom-left
+    case 8: return { ox: w, oy: h, dx: -SQRT1_2, dy: -SQRT1_2 } // bottom-right
+    case 9: return { ox: Math.random() * w, oy: Math.random() * h, dx: 0, dy: 1 } // random
+    default: return { ox: cx, oy: cy, dx: 0, dy: 1, center: true } // center
+  }
+}
 let peaks = [] // persistent per-bar peak value, aligned to `spectrum`
 let peakGravity = 0.01 // how far a peak marker falls per frame (set via "Peak fall speed")
 
@@ -275,6 +299,7 @@ function renderWarp(cx, cy, k, radius, aberr, slice, seed, scan) {
 // Background slideshow layers + wrapper (for blur)
 const bgWrapper = document.getElementById("bg-layers")
 const bgLayers = [document.getElementById("bgA"), document.getElementById("bgB")]
+const bgVideo = document.getElementById("bg-video")
 let activeLayer = 0
 
 // Fullscreen canvas
@@ -687,7 +712,12 @@ function livelyAudioListener(audioArray) {
   let flashK = reduceFlashing ? 0.4 : 1 // accessibility: damp flashing/motion
   if (isBeat) {
     shakeImpulse = Math.max(shakeImpulse, (beatShake / 100) * flashK)
-    if (shockwaveEnabled) shockwaves.push({ radius: innerRadius, alpha: 0.6 * flashK })
+    if (shockwaveEnabled) {
+      let o = shockOrigin(shockwaveOrigin, ctx.canvas.width, ctx.canvas.height, xPos, yPos)
+      // Ring from the center starts at the inner radius; everything else at 0.
+      let startDist = o.center && shockwaveShape === 0 ? innerRadius : 0
+      shockwaves.push({ ox: o.ox, oy: o.oy, dx: o.dx, dy: o.dy, center: !!o.center, dist: startDist, a0: 0.6 * flashK, age: 0 })
+    }
     // Kick off a contract/release pulse from the visualizer center
     if (warpEnabled && gl) {
       warpRipples.push({ f: 0, strength: flashK })
@@ -774,24 +804,47 @@ function livelyAudioListener(audioArray) {
     }
   }
 
-  // Shockwave ripples expanding from the visualizer center on detected beats
+  // Shockwaves: rings or sweeping lines expanding from the chosen origin on beats
   if (shockwaves.length) {
     ctx.lineCap = "butt"
     ctx.shadowBlur = glow
+    let speed = 4 + (shockwaveSpeed / 100) * 24 // px/frame
+    let durFrames = 15 + (shockwaveDuration / 100) * 105 // lifetime
+    let reach = Math.hypot(ctx.canvas.width, ctx.canvas.height)
+    let span = reach // long enough to cross the screen for the Line shape
     for (let i = shockwaves.length - 1; i >= 0; i--) {
       let s = shockwaves[i]
-      s.radius += 12
-      s.alpha -= 0.02
-      if (s.alpha <= 0) {
+      s.dist += speed
+      s.age++
+      let alpha = s.a0 * (1 - s.age / durFrames)
+      if (alpha <= 0 || s.dist > reach + innerRadius) {
         shockwaves.splice(i, 1)
         continue
       }
       let hue = barHue(0.5, 0.5)
-      ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${s.alpha})`
+      ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`
       ctx.shadowColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
-      ctx.lineWidth = 3
+      ctx.lineWidth = shockwaveThickness
       ctx.beginPath()
-      ctx.arc(xPos, yPos, s.radius, 0, Math.PI * 2)
+      if (shockwaveShape === 1) {
+        // Line: a straight bar perpendicular to the travel direction, sliding out
+        let px = -s.dy * span // perpendicular to (dx,dy)
+        let py = s.dx * span
+        let cxp = s.ox + s.dx * s.dist
+        let cyp = s.oy + s.dy * s.dist
+        ctx.moveTo(cxp - px, cyp - py)
+        ctx.lineTo(cxp + px, cyp + py)
+        if (s.center) {
+          // Center origin sweeps both directions
+          let cxm = s.ox - s.dx * s.dist
+          let cym = s.oy - s.dy * s.dist
+          ctx.moveTo(cxm - px, cym - py)
+          ctx.lineTo(cxm + px, cym + py)
+        }
+      } else {
+        // Ring: expanding circle centered on the origin
+        ctx.arc(s.ox, s.oy, s.dist, 0, Math.PI * 2)
+      }
       ctx.stroke()
     }
   }
@@ -870,6 +923,30 @@ let playIndex = 0
 let beatZoomEnabled = false
 let beatZoomAmount = 40 // how hard the background pulses on a beat
 let bgZoom = 1 // current (decaying) background scale
+let videoBgEnabled = false
+let videoBgFile = "" // relative path from the "videos" folderDropdown
+
+// Show/hide the looping video background. When it's on, the image layers are
+// hidden behind it; when off, they come back (slideshow/static resumes).
+function applyVideoBg() {
+  if (videoBgEnabled && videoBgFile) {
+    const src = `/${String(videoBgFile).replace(/\\/g, "/")}`
+    if (bgVideo.getAttribute("src") !== src) {
+      bgVideo.setAttribute("src", src)
+      bgVideo.load()
+    }
+    bgVideo.style.display = "block"
+    const p = bgVideo.play()
+    if (p && p.catch) p.catch(() => {})
+    bgLayers[0].style.visibility = "hidden"
+    bgLayers[1].style.visibility = "hidden"
+  } else {
+    bgVideo.pause()
+    bgVideo.style.display = "none"
+    bgLayers[0].style.visibility = ""
+    bgLayers[1].style.visibility = ""
+  }
+}
 
 function applyBgBlur(px) {
   bgWrapper.style.filter = `blur(${Math.round(px)}px)`
@@ -1001,6 +1078,14 @@ function livelyPropertyListener(name, val) {
     case "beatZoomAmount":
       beatZoomAmount = val
       break
+    case "videoBgEnabled":
+      videoBgEnabled = val
+      applyVideoBg()
+      break
+    case "videoBg":
+      videoBgFile = val
+      if (videoBgEnabled) applyVideoBg()
+      break
     case "slideshowEnabled":
       slideshowEnabled = val
       refreshSlideshowState()
@@ -1069,6 +1154,21 @@ function livelyPropertyListener(name, val) {
       break
     case "shockwave":
       shockwaveEnabled = val
+      break
+    case "shockwaveOrigin":
+      shockwaveOrigin = Math.round(Number(val))
+      break
+    case "shockwaveShape":
+      shockwaveShape = Math.round(Number(val))
+      break
+    case "shockwaveThickness":
+      shockwaveThickness = val
+      break
+    case "shockwaveDuration":
+      shockwaveDuration = val
+      break
+    case "shockwaveSpeed":
+      shockwaveSpeed = val
       break
     case "reduceFlashing":
       reduceFlashing = val
