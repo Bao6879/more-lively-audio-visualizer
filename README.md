@@ -12,14 +12,7 @@ the way — every "upcoming feature" he'd noted (more visualizer types, smoother
 motion, music-reactive scale, a silence threshold, video backgrounds) is in
 here now. Big thanks to elias for the groundwork; see [Credits](#credits).
 
-<!--
-  HERO DEMO = chill_reel.mp4 (the "Author's choice (chill)" preset).
-  To embed: open this README in GitHub's web editor, drag chill_reel.mp4 into the
-  text box, and GitHub gives you a https://github.com/user-attachments/assets/...
-  URL. Paste it on the line below, replacing the placeholder. (A repo-relative
-  path will NOT play inline — it has to be an uploaded-attachment URL.)
--->
-https://github.com/user-attachments/assets/REPLACE-WITH-chill_reel-UPLOAD-URL
+https://github.com/user-attachments/assets/7af38000-2557-4e41-b12e-1bf90cb0e8b1
 
 ```
 Track: Disfigure - Blank [NCS Release]
@@ -80,17 +73,14 @@ nudge any slider afterward.
 The hero clip above is the **Author's choice (chill)** preset. Here's the other
 one I run — **Author's choice (heavy)**, going full tilt:
 
-> ⚠️ **Photosensitivity warning:** this clip has flashing lights, strobing and
+> **Photosensitivity warning:** this clip has flashing lights, strobing and
 > rapid glitch effects. Turn on **Reduce flashing** in Customize to remove the strobe.
 
-<!--
-  Upload heavy_reel.mp4 the same way as the hero clip (drag into GitHub's web
-  editor) and paste the user-attachments URL below, replacing the placeholder.
--->
-https://github.com/user-attachments/assets/REPLACE-WITH-heavy_reel-UPLOAD-URL
+https://github.com/user-attachments/assets/3ec64885-e526-424f-b4f6-bc7d9f770486
 
 ```
 Track: Desmeon - Back From The Dead [NCS Release]
+
 Music provided by NoCopyrightSounds.
 Watch: https://www.youtube.com/watch?v=OFWT4yfPdjo
 Watch more NCS on YouTube: https://NCS.lnk.to/YouTubeAT
@@ -115,6 +105,8 @@ leave it on.
 
 The GPU-heavy effects are labeled **(heavy)** next to their
 controls.
+
+The videos here will look a bit funky. Github upload size limits, you know.
 
 The rounded bars can lag out the visualizer if you run with a lot of bars (especially kaleidoscope). I've defaulted them to off.
 
