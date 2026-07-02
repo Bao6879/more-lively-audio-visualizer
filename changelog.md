@@ -4,6 +4,42 @@ All notable changes to this fork are documented here. This is an extended fork
 of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-audio-visualizer),
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
+## [0.7.2]: 2026-07-02
+### Changed: Beat reactions reworked
+- **Background reactions are now four independent checkboxes** (Shake / Tilt /
+  Blur pulse / Zoom) instead of a single dropdown, so they can be combined. The
+  standalone **Beat zoom** is gone: its swell is now the **Background zoom on
+  beat** checkbox; all four share one **Background reaction strength** slider.
+- **Shake and Tilt are now volume-driven, not beat-driven**: they track the
+  loudness continuously, so a tilt leans and *holds* while the music stays loud
+  and eases back as it quiets, and shake scales with volume. A new **Shake/tilt
+  volume threshold** slider gates both. **Blur pulse and Zoom stay beat-driven.**
+- **Tilt is distinct from Shake**: a smooth, eased lean with a tiny zoom-out
+  versus Shake's per-frame jitter.
+- **Fixed a shake "zoom snap"**: the background used to zoom in slightly while
+  shaking and snap back to normal size when it stopped. The overscale that hides
+  shifted edges is now constant while Shake/Tilt are enabled, so there's no snap.
+- **Stars now "accelerate on beat"** with vibration made optional: the surge is
+  clean by default; a new **Also vibrate star position on beat** checkbox
+  re-enables the positional jolt.
+- **Customize panel reorganized.**
+
+## [0.7.1]: 2026-07-02
+### Added: Beat reactions, idea by OBLIVIION (Batch 7 complete)
+Two beat reactions borrowed from OBLIVIION's fork, credited in the Customize
+panel at the controls. Will be credited with links in the readme when that's done.
+- **Background beat reactions** (Customize → "Background extras:"): a
+  **Background reacts on beat** checkbox, a **Background reaction** dropdown
+  (Shake / Tilt / Blur pulse / Zoom), and a **Background reaction strength**
+  slider. The background wrapper kicks on each detected beat and eases back;
+  since it's the wrapper, a selected video background reacts too. Composed with
+  the existing **Beat zoom** into one transform/filter so they don't fight, and
+  damped by **Reduce flashing**.
+- **Starfield beat reactions** (Customize → "Background stars:"): a **Stars
+  react on beat** checkbox + **Star beat reaction strength** slider. On each
+  beat the stars surge forward and the whole field takes a positional jolt, both
+  easing back. Also damped by **Reduce flashing**.
+
 ## [0.7.0]: 2026-07-02
 ### Added: More energy & reactivity (Batch 7, part 1)
 The three self-contained effects of Batch 7. The two fork-borrowed ideas
@@ -21,7 +57,7 @@ attribution to credit in the UI.
 - **Peak fly-off** (Customize → "Bars:"): a **Peak fly-off** checkbox +
   **Peak fly-off sensitivity** slider. When a bar spikes up fast enough its peak
   cap launches off toward the screen edge, leaving a short fading streak.
-  Independent of the falling **Peak caps**; A per-band cooldown stops a held-loud bar from spraying streaks.
+  Independent of the falling **Peak caps**;
 - **Peak fly-off speed** slider (Customize → "Bars:"): controls how fast a
   launched cap flies off .
 ### Changed

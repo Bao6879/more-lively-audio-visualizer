@@ -831,14 +831,87 @@ function livelyAudioListener(audioArray) {
     beatFlash.style.opacity = 0
   }
 
-  // Beat zoom: the background swells on a beat, then eases back to normal.
-  if (beatZoomEnabled) {
-    if (isBeat) bgZoom = Math.max(bgZoom, 1 + (beatZoomAmount / 100) * 0.15 * flashK)
-    bgZoom += (1 - bgZoom) * 0.15 // decay toward rest
-    bgWrapper.style.transform = `scale(${bgZoom.toFixed(4)})`
-  } else if (bgZoom !== 1) {
+  // Background beat reactions (OBLIVIION): four independent, stackable effects
+  // composed into one wrapper transform + filter. `amt` is the shared strength.
+  // Blur + Zoom fire on beats; Shake + Tilt follow the volume continuously.
+  let amt = bgBeatStrength / 100
+  let bgScale = 1, bgTX = 0, bgTY = 0, bgRot = 0, bgExtraBlur = 0
+
+  // Zoom (beat-driven): a swell that eases back (replaces the old Beat zoom).
+  if (bgBeatZoom) {
+    if (isBeat) bgZoom = Math.max(bgZoom, 1 + amt * 0.15 * flashK)
+    bgZoom += (1 - bgZoom) * 0.15
+    bgScale *= bgZoom
+  } else {
     bgZoom = 1
+  }
+
+  // Loudness above the threshold, normalized 0..1 — drives shake + tilt so they
+  // track the volume rather than firing on discrete beats.
+  let thr = (bgReactThreshold / 100) * 0.35
+  let volN = Math.max(0, Math.min(1, (average - thr) / 0.15)) * flashK
+
+  // Shake (volume-driven): a subtle continuous jitter, magnitude tracks volume.
+  // Deliberately gentle — meant to twitch on a beat drop, not rattle constantly;
+  // for a hard hit use the beat-driven Screen shake instead. Raise the threshold
+  // to hold it off during quieter passages.
+  if (bgBeatShake) {
+    let s = amt * volN
+    bgTX += (Math.random() - 0.5) * s * 9
+    bgTY += (Math.random() - 0.5) * s * 9
+  }
+
+  // Tilt (volume-driven): leans a fixed way, proportional to volume, and holds
+  // there while it's loud — eased so it settles back smoothly as things quiet.
+  // Big enough to actually read as a tilt (a few degrees at typical loudness).
+  let tiltTarget = bgBeatTilt ? amt * volN * 14 : 0 // degrees
+  bgTiltCurrent += (tiltTarget - bgTiltCurrent) * 0.12
+  bgRot += bgTiltCurrent
+  bgScale *= 1 - Math.abs(bgTiltCurrent) * 0.006 // tiny zoom-out tracks the lean
+
+  // Blur pulse (beat-driven): a burst of extra blur, stacked on the slider blur.
+  if (bgBeatBlur) {
+    if (isBeat) bgBlurLevel = Math.max(bgBlurLevel, flashK)
+    bgBlurLevel *= 0.85
+    if (bgBlurLevel < 0.01) bgBlurLevel = 0
+    bgExtraBlur = amt * bgBlurLevel * 14
+  } else {
+    bgBlurLevel = 0
+  }
+
+  // Overscale purely in proportion to the CURRENT motion so an idle background
+  // isn't zoomed at all: 1 at rest, growing only as the tilt leans (eased, no
+  // snap) or the shake displaces, just enough to keep the moved edges covered.
+  let shakePx = Math.max(Math.abs(bgTX), Math.abs(bgTY))
+  let edgePad = 1 + Math.abs(bgTiltCurrent) * 0.02 + shakePx / Math.max(ctx.canvas.width, ctx.canvas.height)
+  let bgAnyReaction = bgBeatShake || bgBeatTilt || bgBeatBlur || bgBeatZoom
+  if (bgAnyReaction || Math.abs(bgTiltCurrent) > 0.01 || bgZoom !== 1) {
+    bgWrapper.style.transform =
+      `translate(${bgTX.toFixed(1)}px, ${bgTY.toFixed(1)}px) rotate(${bgRot.toFixed(2)}deg) scale(${(bgScale * edgePad).toFixed(4)})`
+  } else {
     bgWrapper.style.transform = ""
+  }
+  bgWrapper.style.filter = `blur(${(bgBlurBase + bgExtraBlur).toFixed(1)}px)`
+
+  // Starfield beat reactions (OBLIVIION): accelerate the stars forward on each
+  // beat. Positional vibration is optional (off = a clean acceleration surge).
+  if (starBeatEnabled) {
+    if (isBeat) starBeatLevel = Math.max(starBeatLevel, flashK)
+    starBeatLevel *= 0.85
+    if (starBeatLevel < 0.01) starBeatLevel = 0
+    let sAmt = (starBeatStrength / 100) * starBeatLevel
+    star_speed *= 1 + sAmt * 4
+    if (starBeatVibrate) {
+      starBeatOffX = (Math.random() - 0.5) * sAmt * 120
+      starBeatOffY = (Math.random() - 0.5) * sAmt * 120
+    } else {
+      starBeatOffX = 0
+      starBeatOffY = 0
+    }
+  } else {
+    starBeatLevel = 0
+    starBeatOffX = 0
+    starBeatOffY = 0
   }
 
   // Logo center image location — positioned independently of the visualizer
@@ -1045,11 +1118,30 @@ let playlist = [] // array of relative paths like "images/foo.jpg"
 let playIndex = 0
 
 // Batch 6: background extras
-let beatZoomEnabled = false
-let beatZoomAmount = 40 // how hard the background pulses on a beat
-let bgZoom = 1 // current (decaying) background scale
+let bgZoom = 1 // current (decaying) background scale (driven by the Zoom reaction)
 let videoBgEnabled = false
 let videoBgFile = "" // relative path from the "videos" folderDropdown
+let bgBlurBase = 0 // background blur from the slider; beat blur-pulse adds on top
+
+// Batch 7 part 2: beat reactions borrowed from OBLIVIION's fork (credited in the
+// UI). The background can react in four independent, stackable ways; the stars
+// accelerate on the beat (with optional vibration). One strength slider each.
+// Shake + Tilt are VOLUME-driven (continuous, gated by bgReactThreshold), so a
+// tilt holds while it's loud and relaxes as it quiets; Blur + Zoom are beat-driven.
+let bgBeatShake = false // volume-driven jitter
+let bgBeatTilt = false // volume-driven lean + tiny zoom-out (holds while loud)
+let bgBeatBlur = false // beat-driven blur pulse
+let bgBeatZoom = false // beat-driven swell (was the old standalone "Beat zoom")
+let bgBeatStrength = 50
+let bgReactThreshold = 80 // loudness gate for the volume-driven shake/tilt
+let bgTiltCurrent = 0 // eased tilt angle (deg) for smoothness
+let bgBlurLevel = 0 // decaying impulse for the beat-driven blur pulse
+let starBeatEnabled = false
+let starBeatStrength = 50
+let starBeatVibrate = false // also jolt the field's position (off = accelerate only)
+let starBeatLevel = 0 // decaying beat impulse for the stars
+let starBeatOffX = 0 // positional jolt applied to the starfield (read by stars.js)
+let starBeatOffY = 0
 
 // Show/hide the looping video background. When it's on, the image layers are
 // hidden behind it; when off, they come back (slideshow/static resumes).
@@ -1195,13 +1287,35 @@ function livelyPropertyListener(name, val) {
       if (!slideshowEnabled || playlist.length === 0) setBackground(staticBg, 0)
       break
     case "bgBlur":
+      bgBlurBase = val
       applyBgBlur(val)
       break
-    case "beatZoomEnabled":
-      beatZoomEnabled = val
+    case "bgBeatShake":
+      bgBeatShake = val
       break
-    case "beatZoomAmount":
-      beatZoomAmount = val
+    case "bgBeatTilt":
+      bgBeatTilt = val
+      break
+    case "bgBeatBlur":
+      bgBeatBlur = val
+      break
+    case "bgBeatZoom":
+      bgBeatZoom = val
+      break
+    case "bgBeatStrength":
+      bgBeatStrength = val
+      break
+    case "bgReactThreshold":
+      bgReactThreshold = val
+      break
+    case "starBeatEnabled":
+      starBeatEnabled = val
+      break
+    case "starBeatStrength":
+      starBeatStrength = val
+      break
+    case "starBeatVibrate":
+      starBeatVibrate = val
       break
     case "videoBgEnabled":
       videoBgEnabled = val

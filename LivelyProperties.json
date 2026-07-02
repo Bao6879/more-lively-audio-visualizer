@@ -1,137 +1,56 @@
 {
-  "imageLabel": {
+  "grpVisualizer": {
     "type": "label",
-    "value": "Images:"
+    "value": "══════  VISUALIZER  ══════"
   },
-  "bgImage": {
-    "type": "folderDropdown",
-    "value": "tP5iLDT.jpg",
-    "text": "Background image",
-    "filter": "*.jpg|*.jpeg|*.png|*.webp|*.gif",
-    "folder": "images"
-  },
-  "bgBlur": {
-    "max": 10,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Background image blur",
-    "type": "slider",
-    "value": 0
-  },
-  "slideshowLabel": {
+  "visualizerLabel": {
     "type": "label",
-    "value": "Background slideshow:"
+    "value": "Visualizer:"
   },
-  "slideshowEnabled": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Cycle through images folder"
+  "vizMode": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Visualizer mode",
+    "items": [
+      "Circle",
+      "Bottom bars",
+      "Mirrored bars",
+      "Spectrum line",
+      "Filled area"
+    ]
   },
-  "slideshowInterval": {
-    "max": 600,
-    "min": 3,
-    "tick": 25,
-    "step": 1,
-    "text": "Seconds per image",
-    "type": "slider",
-    "value": 30
+  "symmetry": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Kaleidoscope segments (circle only)",
+    "items": [
+      "Off",
+      "2",
+      "3",
+      "4",
+      "6",
+      "8"
+    ]
   },
-  "slideshowShuffle": {
-    "type": "checkbox",
-    "value": true,
-    "text": "Shuffle order"
+  "edgeMirror": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Edge mirror (bar modes only)",
+    "items": [
+      "Off",
+      "Top + bottom",
+      "Left + right",
+      "All 4 sides"
+    ]
   },
-  "slideshowFade": {
-    "max": 10,
+  "innerRadius": {
+    "max": 90,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Crossfade seconds",
-    "type": "slider",
-    "value": 2
-  },
-  "bgDim": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Background dim",
-    "type": "slider",
-    "value": 0
-  },
-  "bgExtrasLabel": {
-    "type": "label",
-    "value": "Background extras:"
-  },
-  "beatZoomEnabled": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Beat zoom (background pulses on beat)"
-  },
-  "beatZoomAmount": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Beat zoom strength",
-    "type": "slider",
-    "value": 40
-  },
-  "videoBgEnabled": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Video background (heavy — loops muted)"
-  },
-  "videoBg": {
-    "type": "folderDropdown",
-    "value": "",
-    "text": "Background video",
-    "filter": "*.mp4|*.webm",
-    "folder": "videos"
-  },
-  "useMiddleImage": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Show center image"
-  },
-  "middleImage": {
-    "type": "folderDropdown",
-    "value": "cldkid.svg",
-    "text": "Center image",
-    "filter": "*.jpg|*.jpeg|*.png|*.webp|*.gif|*.svg",
-    "folder": "logos"
-  },
-  "middleImageScale": {
-    "max": 105,
-    "min": 10,
-    "tick": 25,
-    "step": 1,
-    "text": "Center image scale",
-    "type": "slider",
-    "value": 95
-  },
-  "logoXPercent": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Center image horizontal position",
+    "text": "Visualizer size",
     "type": "slider",
     "value": 50
-  },
-  "logoYPercent": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Center image vertical position",
-    "type": "slider",
-    "value": 50
-  },
-  "barLabel": {
-    "type": "label",
-    "value": "Bars:"
   },
   "barCount": {
     "max": 256,
@@ -141,6 +60,10 @@
     "text": "Number of bars",
     "type": "slider",
     "value": 128
+  },
+  "barLabel": {
+    "type": "label",
+    "value": "Bars:"
   },
   "maxLength": {
     "max": 500,
@@ -173,6 +96,28 @@
     "type": "checkbox",
     "value": true,
     "text": "Rounded bars"
+  },
+  "barCompensation": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Bass compensation",
+    "type": "slider",
+    "value": 25
+  },
+  "innerMovement": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Inner circle reactivity",
+    "type": "slider",
+    "value": 25
+  },
+  "peakLabel": {
+    "type": "label",
+    "value": "Peaks:"
   },
   "peakCaps": {
     "type": "checkbox",
@@ -211,68 +156,113 @@
     "type": "slider",
     "value": 50
   },
-  "innerRadius": {
-    "max": 90,
+  "colorLabel": {
+    "type": "label",
+    "value": "Colors:"
+  },
+  "colorMode": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Color mode",
+    "items": [
+      "Static gradient",
+      "Rainbow cycle",
+      "Volume-reactive"
+    ]
+  },
+  "rainbowSpeed": {
+    "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Visualizer size",
+    "text": "Rainbow / shift speed",
+    "type": "slider",
+    "value": 30
+  },
+  "startHue": {
+    "max": 360,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Top color",
+    "type": "slider",
+    "value": 206
+  },
+  "endHue": {
+    "max": 360,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Bottom color",
+    "type": "slider",
+    "value": 170
+  },
+  "saturation": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 5,
+    "text": "Color saturation",
     "type": "slider",
     "value": 50
   },
-  "innerMovement": {
+  "lightness": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 5,
+    "text": "Color lightness",
+    "type": "slider",
+    "value": 50
+  },
+  "barGradient": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Gradient along each bar"
+  },
+  "grpMotion": {
+    "type": "label",
+    "value": "══════  PLACEMENT & MOTION  ══════"
+  },
+  "locationLabel": {
+    "type": "label",
+    "value": "Position & shake:"
+  },
+  "xPercent": {
     "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Inner circle reactivity",
+    "text": "Horizontal location",
     "type": "slider",
-    "value": 25
+    "value": 50
   },
-  "barCompensation": {
+  "yPercent": {
     "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Bass compensation",
+    "text": "Vertical location",
     "type": "slider",
-    "value": 25
+    "value": 50
   },
-  "vizMode": {
-    "type": "dropdown",
-    "value": 0,
-    "text": "Visualizer mode",
-    "items": [
-      "Circle",
-      "Bottom bars",
-      "Mirrored bars",
-      "Spectrum line",
-      "Filled area"
-    ]
+  "shakeSpeed": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shake speed",
+    "type": "slider",
+    "value": 50
   },
-  "symmetry": {
-    "type": "dropdown",
-    "value": 0,
-    "text": "Kaleidoscope segments (circle only)",
-    "items": [
-      "Off",
-      "2",
-      "3",
-      "4",
-      "6",
-      "8"
-    ]
-  },
-  "edgeMirror": {
-    "type": "dropdown",
-    "value": 0,
-    "text": "Edge mirror (bar modes only)",
-    "items": [
-      "Off",
-      "Top + bottom",
-      "Left + right",
-      "All 4 sides"
-    ]
+  "shakeRadius": {
+    "max": 50,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shake radius",
+    "type": "slider",
+    "value": 15
   },
   "motionLabel": {
     "type": "label",
@@ -314,9 +304,53 @@
     "type": "slider",
     "value": 0
   },
+  "shadowLabel": {
+    "type": "label",
+    "value": "Shadow:"
+  },
+  "shadowX": {
+    "max": 32,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shadow horizontal offset",
+    "type": "slider",
+    "value": 4
+  },
+  "shadowY": {
+    "max": 32,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shadow vertical offset",
+    "type": "slider",
+    "value": 4
+  },
+  "shadowBlur": {
+    "max": 20,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shadow blur",
+    "type": "slider",
+    "value": 4
+  },
+  "shadowOpacity": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Shadow opacity",
+    "type": "slider",
+    "value": 25
+  },
+  "grpBeat": {
+    "type": "label",
+    "value": "══════  BEAT EFFECTS  ══════"
+  },
   "beatLabel": {
     "type": "label",
-    "value": "Beat-reactive:"
+    "value": "Beat detection:"
   },
   "beatSensitivity": {
     "max": 100,
@@ -336,6 +370,15 @@
     "type": "slider",
     "value": 0
   },
+  "reduceFlashing": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Reduce flashing (accessibility)"
+  },
+  "onBeatLabel": {
+    "type": "label",
+    "value": "On-beat effects:"
+  },
   "beatShake": {
     "max": 100,
     "min": 0,
@@ -344,6 +387,34 @@
     "text": "Screen shake on beat",
     "type": "slider",
     "value": 0
+  },
+  "beatTeleport": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Teleport on beat (jump to a new spot)"
+  },
+  "beatFlashEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Beat flash (full-screen colour on beat)"
+  },
+  "beatFlashColor": {
+    "text": "Beat flash color",
+    "type": "color",
+    "value": "#FFFFFF"
+  },
+  "beatFlashStrength": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Beat flash strength",
+    "type": "slider",
+    "value": 60
+  },
+  "shockwaveLabel": {
+    "type": "label",
+    "value": "Shockwave:"
   },
   "shockwave": {
     "type": "checkbox",
@@ -402,35 +473,6 @@
     "text": "Shockwave speed",
     "type": "slider",
     "value": 40
-  },
-  "beatFlashEnabled": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Beat flash (full-screen colour on beat)"
-  },
-  "beatFlashColor": {
-    "text": "Beat flash color",
-    "type": "color",
-    "value": "#FFFFFF"
-  },
-  "beatFlashStrength": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Beat flash strength",
-    "type": "slider",
-    "value": 60
-  },
-  "beatTeleport": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Teleport on beat (jump to a new spot)"
-  },
-  "reduceFlashing": {
-    "type": "checkbox",
-    "value": false,
-    "text": "Reduce flashing (accessibility)"
   },
   "warpLabel": {
     "type": "label",
@@ -501,91 +543,171 @@
     "type": "slider",
     "value": 40
   },
-  "colorLabel": {
+  "grpBackground": {
     "type": "label",
-    "value": "Colors:"
+    "value": "══════  BACKGROUND  ══════"
   },
-  "colorMode": {
-    "type": "dropdown",
-    "value": 0,
-    "text": "Color mode",
-    "items": [
-      "Static gradient",
-      "Rainbow cycle",
-      "Volume-reactive"
-    ]
+  "imageLabel": {
+    "type": "label",
+    "value": "Background image:"
   },
-  "rainbowSpeed": {
+  "bgImage": {
+    "type": "folderDropdown",
+    "value": "tP5iLDT.jpg",
+    "text": "Background image",
+    "filter": "*.jpg|*.jpeg|*.png|*.webp|*.gif",
+    "folder": "images"
+  },
+  "bgBlur": {
+    "max": 10,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Background image blur",
+    "type": "slider",
+    "value": 0
+  },
+  "bgDim": {
     "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Rainbow / shift speed",
+    "text": "Background dim",
+    "type": "slider",
+    "value": 0
+  },
+  "slideshowLabel": {
+    "type": "label",
+    "value": "Background slideshow:"
+  },
+  "slideshowEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Cycle through images folder"
+  },
+  "slideshowInterval": {
+    "max": 600,
+    "min": 3,
+    "tick": 25,
+    "step": 1,
+    "text": "Seconds per image",
     "type": "slider",
     "value": 30
   },
-  "startHue": {
-    "max": 360,
+  "slideshowShuffle": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Shuffle order"
+  },
+  "slideshowFade": {
+    "max": 10,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Top color",
+    "text": "Crossfade seconds",
     "type": "slider",
-    "value": 206
+    "value": 2
   },
-  "endHue": {
-    "max": 360,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Bottom color",
-    "type": "slider",
-    "value": 170
+  "videoLabel": {
+    "type": "label",
+    "value": "Background video:"
   },
-  "saturation": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 5,
-    "text": "Color saturation",
-    "type": "slider",
-    "value": 50
-  },
-  "lightness": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 5,
-    "text": "Color lightness",
-    "type": "slider",
-    "value": 50
-  },
-  "barGradient": {
+  "videoBgEnabled": {
     "type": "checkbox",
     "value": false,
-    "text": "Gradient along each bar"
+    "text": "Video background (heavy — loops muted)"
   },
-  "shakeLabel": {
+  "videoBg": {
+    "type": "folderDropdown",
+    "value": "",
+    "text": "Background video",
+    "filter": "*.mp4|*.webm",
+    "folder": "videos"
+  },
+  "bgBeatLabel": {
     "type": "label",
-    "value": "Visualizer shake/wobble:"
+    "value": "Background beat reactions (idea by OBLIVIION):"
   },
-  "shakeSpeed": {
+  "bgBeatShake": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Background shake (follows volume)"
+  },
+  "bgBeatTilt": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Background tilt (follows volume)"
+  },
+  "bgBeatBlur": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Background blur pulse on beat"
+  },
+  "bgBeatZoom": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Background zoom on beat"
+  },
+  "bgBeatStrength": {
     "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Shake speed",
+    "text": "Background reaction strength",
     "type": "slider",
     "value": 50
   },
-  "shakeRadius": {
-    "max": 50,
+  "bgReactThreshold": {
+    "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Shake radius",
+    "text": "Shake/tilt volume threshold",
     "type": "slider",
-    "value": 15
+    "value": 80
+  },
+  "centerLabel": {
+    "type": "label",
+    "value": "Center image:"
+  },
+  "useMiddleImage": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Show center image"
+  },
+  "middleImage": {
+    "type": "folderDropdown",
+    "value": "cldkid.svg",
+    "text": "Center image",
+    "filter": "*.jpg|*.jpeg|*.png|*.webp|*.gif|*.svg",
+    "folder": "logos"
+  },
+  "middleImageScale": {
+    "max": 105,
+    "min": 10,
+    "tick": 25,
+    "step": 1,
+    "text": "Center image scale",
+    "type": "slider",
+    "value": 95
+  },
+  "logoXPercent": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Center image horizontal position",
+    "type": "slider",
+    "value": 50
+  },
+  "logoYPercent": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Center image vertical position",
+    "type": "slider",
+    "value": 50
   },
   "starsLabel": {
     "type": "label",
@@ -628,66 +750,27 @@
     "type": "slider",
     "value": 10
   },
-  "locationLabel": {
+  "starBeatLabel": {
     "type": "label",
-    "value": "Visualizer location:"
+    "value": "Star beat reactions (idea by OBLIVIION):"
   },
-  "xPercent": {
+  "starBeatEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Stars accelerate on beat"
+  },
+  "starBeatStrength": {
     "max": 100,
     "min": 0,
     "tick": 25,
     "step": 1,
-    "text": "Horizontal location",
+    "text": "Star beat reaction strength",
     "type": "slider",
     "value": 50
   },
-  "yPercent": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Vertical location",
-    "type": "slider",
-    "value": 50
-  },
-  "shadowLabel": {
-    "type": "label",
-    "value": "Visualizer shadow:"
-  },
-  "shadowX": {
-    "max": 32,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Shadow horizontal offset",
-    "type": "slider",
-    "value": 4
-  },
-  "shadowY": {
-    "max": 32,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Shadow vertical offset",
-    "type": "slider",
-    "value": 4
-  },
-  "shadowBlur": {
-    "max": 20,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Shadow blur",
-    "type": "slider",
-    "value": 4
-  },
-  "shadowOpacity": {
-    "max": 100,
-    "min": 0,
-    "tick": 25,
-    "step": 1,
-    "text": "Shadow opacity",
-    "type": "slider",
-    "value": 25
+  "starBeatVibrate": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Also vibrate star position on beat"
   }
 }
