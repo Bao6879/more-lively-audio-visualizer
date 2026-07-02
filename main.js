@@ -56,6 +56,21 @@ let reduceFlashing = false // accessibility: damp flashing / rapid motion
 
 let peakCaps = false // per-bar peak markers that hold, then fall under gravity
 
+// --- Batch 5: warp & glitch -------------------------------------------------
+// Warp is a beat-driven contract-then-release: each beat implodes the whole
+// image toward the visualizer center, then it bounces back out and settles.
+// It's a single time-based radial *scale* (uniform for every pixel), not a
+// travelling ring — so the image can never appear at two radii at once (the
+// old sine-ring shader duplicated the circle). Rendered on the GPU (WebGL):
+// the 2D canvas is fed in as a texture and a fragment shader scales the lookup
+// radially, so it's cheap even full-screen (the old SVG feDisplacementMap was
+// CPU-bound and slow).
+let warpEnabled = false
+let warpAmount = 40 // hit strength: how far the image contracts on a beat (0 = off)
+let warpDetail = 40 // pulse duration: longer = slower, springier contract/release
+let warpRipples = [] // active pulses: { f: age frames, strength: 0..1 }
+let warpActive = false // is the GL overlay currently shown (source hidden)
+
 let beatEnergyAvg = 0 // slow rolling loudness baseline for beat detection
 let beatCooldownFrames = 0 // min-gap counter so one beat doesn't double-trigger
 let shakeImpulse = 0 // decaying beat-shake magnitude
@@ -73,6 +88,140 @@ const middle = document.getElementById("middle")
 const canvas = document.getElementById("canvas")
 const visualizer = document.getElementById("visualizer")
 const starfield = document.getElementById("starfield")
+
+// ----------------------------------------------------------------------------
+// Batch 5: GPU warp (WebGL droplet ripples)
+// ----------------------------------------------------------------------------
+// The 2D visualizer canvas is uploaded as a texture; a fragment shader pinches
+// each pixel's lookup radially about the visualizer center. The pinch strength
+// (u_k) is weighted by a Gaussian bump that's strongest at the center and
+// falls off to nothing by u_radius — so the middle gets sucked in / warped hard
+// while the far surroundings stay put. It's a lens, not a uniform zoom, and
+// there's no travelling wave to duplicate the circle.
+const glcanvas = document.getElementById("glcanvas")
+let gl = null
+let glProg = null
+let glTex = null
+let glQuad = null
+let glLoc = {}
+let glInitFailed = false
+
+const WARP_VERT = `
+attribute vec2 a_pos;
+varying vec2 v_uv;
+void main() {
+  v_uv = a_pos * 0.5 + 0.5;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`
+
+const WARP_FRAG = `
+precision highp float;
+uniform sampler2D u_tex;
+uniform vec2 u_res;
+uniform vec2 u_center;
+uniform float u_k;       // pinch strength: >0 suck toward center, <0 bulge out
+uniform float u_radius;  // px radius over which the pinch fades to nothing
+varying vec2 v_uv;
+void main() {
+  // Pixel coord with top-left origin (matches u_center = visualizer center)
+  vec2 px = vec2(v_uv.x * u_res.x, (1.0 - v_uv.y) * u_res.y);
+  vec2 d = px - u_center;
+  float r = length(d);
+  float nr = r / u_radius;
+  float bump = exp(-nr * nr * 2.0);      // 1 at center, ~0 by u_radius
+  float srcR = r * (1.0 + u_k * bump);   // sample farther out near center = suck in
+  vec2 src = u_center + (d / max(r, 0.0001)) * srcR;
+  gl_FragColor = texture2D(u_tex, src / u_res);
+}`
+
+function compileShader(type, src) {
+  let sh = gl.createShader(type)
+  gl.shaderSource(sh, src)
+  gl.compileShader(sh)
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    console.error("Warp shader error:", gl.getShaderInfoLog(sh))
+    return null
+  }
+  return sh
+}
+
+// Lazily bring up WebGL the first time warp is enabled. Returns false (and sets
+// glInitFailed) if the context or shaders aren't available, so warp no-ops
+// gracefully instead of throwing every frame.
+function initWarpGL() {
+  if (gl || glInitFailed) return !!gl
+  glcanvas.width = canvas.width
+  glcanvas.height = canvas.height
+  gl = glcanvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false })
+  if (!gl) {
+    glInitFailed = true
+    return false
+  }
+  let vs = compileShader(gl.VERTEX_SHADER, WARP_VERT)
+  let fs = compileShader(gl.FRAGMENT_SHADER, WARP_FRAG)
+  glProg = gl.createProgram()
+  gl.attachShader(glProg, vs)
+  gl.attachShader(glProg, fs)
+  gl.linkProgram(glProg)
+  if (!vs || !fs || !gl.getProgramParameter(glProg, gl.LINK_STATUS)) {
+    console.error("Warp program link failed")
+    gl = null
+    glInitFailed = true
+    return false
+  }
+  glLoc = {
+    pos: gl.getAttribLocation(glProg, "a_pos"),
+    tex: gl.getUniformLocation(glProg, "u_tex"),
+    res: gl.getUniformLocation(glProg, "u_res"),
+    center: gl.getUniformLocation(glProg, "u_center"),
+    k: gl.getUniformLocation(glProg, "u_k"),
+    radius: gl.getUniformLocation(glProg, "u_radius"),
+  }
+  glQuad = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, glQuad)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  glTex = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, glTex)
+  // Non-power-of-two source: clamp + linear, no mipmaps
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  return true
+}
+
+// Show/hide the GL overlay. While active the crisp 2D canvas is hidden (it's
+// still drawn each frame as the texture source); at rest we show it directly
+// and the GL canvas does nothing.
+function setWarpActive(on) {
+  if (on === warpActive) return
+  warpActive = on
+  glcanvas.style.display = on ? "block" : "none"
+  canvas.style.visibility = on ? "hidden" : "visible"
+}
+
+function renderWarp(cx, cy, k, radius) {
+  gl.viewport(0, 0, glcanvas.width, glcanvas.height)
+  gl.clearColor(0, 0, 0, 0)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.useProgram(glProg)
+
+  gl.activeTexture(gl.TEXTURE0)
+  gl.bindTexture(gl.TEXTURE_2D, glTex)
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas)
+
+  gl.uniform1i(glLoc.tex, 0)
+  gl.uniform2f(glLoc.res, glcanvas.width, glcanvas.height)
+  gl.uniform2f(glLoc.center, cx, cy)
+  gl.uniform1f(glLoc.k, k)
+  gl.uniform1f(glLoc.radius, radius)
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, glQuad)
+  gl.enableVertexAttribArray(glLoc.pos)
+  gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0)
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+}
 
 // Background slideshow layers + wrapper (for blur)
 const bgWrapper = document.getElementById("bg-layers")
@@ -490,6 +639,11 @@ function livelyAudioListener(audioArray) {
   if (isBeat) {
     shakeImpulse = Math.max(shakeImpulse, (beatShake / 100) * flashK)
     if (shockwaveEnabled) shockwaves.push({ radius: innerRadius, alpha: 0.6 * flashK })
+    // Kick off a contract/release pulse from the visualizer center
+    if (warpEnabled && gl) {
+      warpRipples.push({ f: 0, strength: flashK })
+      if (warpRipples.length > 4) warpRipples.shift()
+    }
   }
 
   // Beat shake: a quick positional kick that decays every frame
@@ -580,6 +734,38 @@ function livelyAudioListener(audioArray) {
       ctx.beginPath()
       ctx.arc(xPos, yPos, s.radius, 0, Math.PI * 2)
       ctx.stroke()
+    }
+  }
+
+  // --- Warp (GPU): beat-driven contract-then-release from the center ---------
+  // Each beat spawns a pulse. A pulse's contraction follows one damped sine
+  // cycle: it dips in (implode), swings back out past rest (overshoot), then
+  // settles. We sum the active pulses into a single radial scale and, while
+  // that's non-zero, render the scaled result on the GL overlay; once every
+  // pulse has settled we drop back to the crisp 2D canvas so warp costs
+  // nothing between beats.
+  if (warpEnabled && gl) {
+    let period = 3.5 + (warpDetail / 100) * 10 // pulse length in frames (~0.06–0.22s), very snappy
+    let contractAmp = (warpAmount / 100) * 0.9 // max suck-in strength near the center
+    let expandAmp = 0.17 // max bulge-out ≈ 20% bigger than original
+    let radius = Math.hypot(ctx.canvas.width, ctx.canvas.height) * 0.5 // pinch reach
+    let k = 0 // total pinch: >0 suck toward center, <0 bulge back out
+    for (let i = warpRipples.length - 1; i >= 0; i--) {
+      let p = warpRipples[i]
+      let t = p.f / period // normalized age (1 = one full pulse)
+      // One full sine cycle: first half sucks in (contract), second half bulges
+      // back out past rest (expand), both snapping to zero. Contract and expand
+      // get separate amplitudes so the pull is strong but the bulge is modest.
+      let s = Math.sin(2 * Math.PI * t)
+      k += p.strength * (s >= 0 ? contractAmp * s : expandAmp * s)
+      p.f++
+      if (t >= 1) warpRipples.splice(i, 1) // pulse complete
+    }
+    if (Math.abs(k) > 0.001) {
+      setWarpActive(true)
+      renderWarp(xPos, yPos, Math.min(3, k), radius)
+    } else {
+      setWarpActive(false)
     }
   }
 }
@@ -797,6 +983,21 @@ function livelyPropertyListener(name, val) {
       break
     case "peakGravity":
       peakGravity = val / 1000
+      break
+    case "warpEnabled":
+      warpEnabled = val
+      if (warpEnabled) {
+        initWarpGL() // brings up WebGL once; ripples fire on the next beat
+      } else {
+        warpRipples.length = 0
+        setWarpActive(false)
+      }
+      break
+    case "warpAmount":
+      warpAmount = val
+      break
+    case "warpDetail":
+      warpDetail = val
       break
     case "barCompensation":
       compensation = val

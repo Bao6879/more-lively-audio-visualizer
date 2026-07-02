@@ -302,6 +302,33 @@
     "value": false,
     "text": "Reduce flashing (accessibility)"
   },
+  "warpLabel": {
+    "type": "label",
+    "value": "Warp & glitch (heavy):"
+  },
+  "warpEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Warp: contract/release on beat (GPU)"
+  },
+  "warpAmount": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Warp hit strength",
+    "type": "slider",
+    "value": 40
+  },
+  "warpDetail": {
+    "max": 100,
+    "min": 1,
+    "tick": 25,
+    "step": 1,
+    "text": "Warp pulse duration",
+    "type": "slider",
+    "value": 40
+  },
   "colorLabel": {
     "type": "label",
     "value": "Colors:"

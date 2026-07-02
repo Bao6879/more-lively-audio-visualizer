@@ -5,6 +5,21 @@ of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-a
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
 
+## [0.5.0]: 2026-07-02
+### Added: Warp on beat (Customize → "Warp & glitch (heavy):")
+- **Warp: contract/release on beat (GPU)** checkbox: each detected beat fires a
+  fast pinch centered on the visualizer: the middle gets sucked inward, then
+  bulges back out ~20% past rest and snaps to normal, all in a fraction of a
+  second. It's a lens: the distortion is strongest at the center and fades to
+  nothing toward the screen edges, so the surroundings warp around the pull
+  rather than the whole image zooming uniformly. Driven by the same beat detector
+  as the shake/shockwave.
+- **Warp hit strength** slider: how hard the center gets pulled in.
+- **Warp pulse duration** slider: how long the pinch lasts (all snappy; higher =
+  slightly longer contract/release).
+- Respects the existing **Reduce flashing (accessibility)** toggle, which damps
+  the pinch strength alongside the beat shake/shockwave.
+
 ## [0.4.3]: 2026-07-01
 ### Added
 - **Peak fall speed** slider: controls how fast the peak markers drop.
