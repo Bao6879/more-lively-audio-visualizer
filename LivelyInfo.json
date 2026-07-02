@@ -1,14 +1,17 @@
 {
   "AppVersion": "1.5.0.0",
-  "Title": "Circle Audio Visualizer",
-  "Thumbnail": "00ddy3tw.jpg",
-  "Preview": "qpyivo5q.gif",
-  "Desc": "A simple audio visualizer with a circular spectrum",
-  "Author": "elias123tre",
-  "License": null,
-  "Contact": "https://github.com/elias123tre/lively-audio-visualizer",
+  "Title": "Extended Audio Visualizer",
+  "Thumbnail": "gueyjflf.0td.jpg",
+  "Preview": "mtfhfbm3.33j.gif",
+  "Desc": "An extended and customizable audio visualizer.",
+  "Author": "Bao6879",
+  "License": "MIT",
+  "Contact": "https://github.com/Bao6879/more-lively-audio-visualizer",
   "Type": 2,
   "FileName": "index.html",
   "Arguments": null,
-  "IsAbsolutePath": false
+  "IsAbsolutePath": false,
+  "Id": null,
+  "Tags": null,
+  "Version": 1
 }

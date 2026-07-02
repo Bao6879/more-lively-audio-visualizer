@@ -649,7 +649,7 @@
   },
   "bgBeatLabel": {
     "type": "label",
-    "value": "Background beat reactions (idea by OBLIVIION):"
+    "value": "Background beat reactions (idea by OBLVIION):"
   },
   "bgBeatShake": {
     "type": "checkbox",
@@ -775,7 +775,7 @@
   },
   "starBeatLabel": {
     "type": "label",
-    "value": "Star beat reactions (idea by OBLIVIION):"
+    "value": "Star beat reactions (idea by OBLVIION):"
   },
   "starBeatEnabled": {
     "type": "checkbox",

@@ -833,7 +833,7 @@ function livelyAudioListener(audioArray) {
     beatFlash.style.opacity = 0
   }
 
-  // Background beat reactions (OBLIVIION): four independent, stackable effects
+  // Background beat reactions (OBLVIION): four independent, stackable effects
   // composed into one wrapper transform + filter. `amt` is the shared strength.
   // Blur + Zoom fire on beats; Shake + Tilt follow the volume continuously.
   let amt = bgBeatStrength / 100
@@ -895,7 +895,7 @@ function livelyAudioListener(audioArray) {
   }
   bgWrapper.style.filter = `blur(${(bgBlurBase + bgExtraBlur).toFixed(1)}px)`
 
-  // Starfield beat reactions (OBLIVIION): accelerate the stars forward on each
+  // Starfield beat reactions (OBLVIION): accelerate the stars forward on each
   // beat. Positional vibration is optional (off = a clean acceleration surge).
   if (starBeatEnabled) {
     if (isBeat) starBeatLevel = Math.max(starBeatLevel, flashK)
@@ -1125,7 +1125,7 @@ let videoBgEnabled = false
 let videoBgFile = "" // relative path from the "videos" folderDropdown
 let bgBlurBase = 0 // background blur from the slider; beat blur-pulse adds on top
 
-// Batch 7 part 2: beat reactions borrowed from OBLIVIION's fork (credited in the
+// Batch 7 part 2: beat reactions borrowed from OBLVIION's fork (credited in the
 // UI). The background can react in four independent, stackable ways; the stars
 // accelerate on the beat (with optional vibration). One strength slider each.
 // Shake + Tilt are VOLUME-driven (continuous, gated by bgReactThreshold), so a
@@ -1259,8 +1259,10 @@ function refreshSlideshowState() {
 // look at once and switching presets fully re-themes (no leftovers from a prior
 // vibe or from the user's slider tweaks). PRESET_BASE is a neutral, effects-off
 // baseline. Deliberately NOT touched by presets: reduceFlashing (accessibility),
-// visualizer position, shadow, and content (background image/slideshow/video,
-// center image) — those stay whatever the user set.
+// horizontal position, shadow, and content (background image/slideshow/video,
+// center image) — those stay whatever the user set. Vertical position IS set
+// (default 50; bottom-anchored presets force 100) so switching away from a
+// bottom preset doesn't leave the visualizer stuck at the previous height.
 const PRESET_BASE = {
   vizMode: 0, symmetry: 0, edgeMirror: 0,
   colorMode: 0, rainbowSpeed: 30, startHue: 206, endHue: 170, saturation: 50, lightness: 50, barGradient: false,
@@ -1276,7 +1278,7 @@ const PRESET_BASE = {
   showStars: true, starColor: "#FFFFFF", starOpacity: 35, starGlow: 15, starBlur: 10,
   bgBeatShake: false, bgBeatTilt: false, bgBeatBlur: false, bgBeatZoom: false, bgBeatStrength: 50, bgReactThreshold: 80,
   starBeatEnabled: false, starBeatStrength: 50, starBeatVibrate: false,
-  shakeSpeed: 50, shakeRadius: 15,
+  yPercent: 50, shakeSpeed: 50, shakeRadius: 15,
 }
 
 // Index 0 is "Custom" (no-op); 1..N line up with the dropdown items below.
@@ -1295,14 +1297,12 @@ const PRESETS = [
     ...PRESET_BASE, vizMode: 0, startHue: 165, endHue: 200, saturation: 66, lightness: 58,
     barGradient: true, barWidth: 35, barGlow: 16, innerRadius: 46, innerMovement: 35, smoothing: 55, rotationSpeed: 6,
     beatPulse: 18, peakCaps: true, peakGravity: 8,
-    shockwave: true, shockwaveShape: 0, shockwaveThickness: 2, shockwaveSpeed: 35,
     bgDim: 30, starColor: "#7FEAD8", starOpacity: 35, starGlow: 16,
     starBeatEnabled: true, starBeatStrength: 35, bgBeatTilt: true, bgBeatStrength: 25,
   },
   { // 3 = House / DJ — steady club groove: mirrored bars, rainbow cycle, bg zoom on beat
     ...PRESET_BASE, vizMode: 2, colorMode: 1, rainbowSpeed: 40, saturation: 80, lightness: 55,
     barWidth: 45, barGlow: 14, smoothing: 35, beatPulse: 30, beatSensitivity: 60, beatShake: 25,
-    shockwave: true, shockwaveShape: 1, shockwaveOrigin: 2, shockwaveSpeed: 45,
     bgBeatZoom: true, bgBeatStrength: 45, bgDim: 25, showStars: false,
   },
   { // 4 = EDM / Festival — Monstercat energy: kaleidoscope ring, rainbow, glow, flash

@@ -11,6 +11,8 @@ a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/r
   flash + shockwave, background & star beat reactions). Deliberately heavy. **MASSIVE EPILEPSY WARNING**.
 - **Author's choice (chill)** preset: my own laid-back look
   (edge-mirrored bottom bars, rainbow cycle, peak caps, gentle background tilt).
+- **MIT `LICENSE`.** The original author granted permission to reuse the code
+  (WTFPL).
 
 ### Changed
 - **Rounded bars is now OFF by default.** Round line caps get expensive when the

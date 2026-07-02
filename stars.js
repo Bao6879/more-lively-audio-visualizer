@@ -51,7 +51,7 @@ function anim() {
       if (star_x_save > 0 && star_x_save < w && star_y_save > 0 && star_y_save < h) {
         context.lineWidth = (1 - star_color_ratio * star.speed) * 2
         context.beginPath()
-        // starBeatOffX/Y are the OBLIVIION beat jolt (set in main.js; 0 when off)
+        // starBeatOffX/Y are the OBLVIION beat jolt (set in main.js; 0 when off)
         context.translate(
           starfield.width * (xPercent / 100 - 0.5) + starBeatOffX,
           starfield.height * (yPercent / 100 - 0.5) + starBeatOffY
