@@ -19,9 +19,51 @@
             user-select: none;
         }
 
+        /* Background slideshow layers (two stacked layers for crossfading) */
+        #bg-layers {
+            position: absolute;
+            inset: 0;
+            z-index: -20;
+            overflow: hidden;
+        }
+
+        .bg-layer {
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            opacity: 0;
+        }
+
+        #bgA {
+            opacity: 1;
+        }
+
+        /* Darkening overlay between the background and the starfield */
+        #dim-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: -15;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         #starfield {
             position: absolute;
             z-index: -10;
+        }
+
+        /* GPU warp overlay: sits exactly over #canvas, hidden until warp fires */
+        #glcanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            pointer-events: none;
         }
 
         body {
@@ -49,14 +91,30 @@
 </head>
 
 <body>
+    <div id="bg-layers">
+        <div class="bg-layer" id="bgA"></div>
+        <div class="bg-layer" id="bgB"></div>
+    </div>
+
+    <div id="dim-overlay"></div>
+
     <canvas id="starfield"></canvas>
 
     <div id="visualizer">
         <img id="middle" />
         <canvas id="canvas"></canvas>
+        <!-- Batch 5: GPU warp overlay. When warp is active the 2D #canvas is
+             hidden and used as a texture source; this WebGL canvas draws the
+             displaced (ripple) result. Hidden entirely when warp is at rest. -->
+        <canvas id="glcanvas"></canvas>
     </div>
 
     <pre id="debug"></pre>
+
+    <!-- Slideshow playlist (regenerate with generate-playlist.bat). Loaded as a
+         script tag on purpose: fetch() of local files is unreliable under file://,
+         a script tag is not. Defines window.SLIDESHOW_FILES. -->
+    <script src="images/playlist.js"></script>
 
     <script src="noise.js"></script>
     <script src="main.js"></script>

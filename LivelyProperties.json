@@ -60,6 +60,24 @@
     "type": "slider",
     "value": 0
   },
+  "bgExtrasLabel": {
+    "type": "label",
+    "value": "Background extras:"
+  },
+  "beatZoomEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Beat zoom (background pulses on beat)"
+  },
+  "beatZoomAmount": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Beat zoom strength",
+    "type": "slider",
+    "value": 40
+  },
   "useMiddleImage": {
     "type": "checkbox",
     "value": false,
@@ -326,6 +344,48 @@
     "tick": 25,
     "step": 1,
     "text": "Warp pulse duration",
+    "type": "slider",
+    "value": 40
+  },
+  "rgbSplitEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "RGB split / chromatic aberration (GPU)"
+  },
+  "rgbSplitAmount": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "RGB split strength",
+    "type": "slider",
+    "value": 50
+  },
+  "sliceGlitchEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Slice glitch on beat (GPU)"
+  },
+  "sliceGlitchAmount": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Slice glitch strength",
+    "type": "slider",
+    "value": 50
+  },
+  "scanlinesEnabled": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Scanlines / VHS overlay (GPU)"
+  },
+  "scanlineAmount": {
+    "max": 100,
+    "min": 0,
+    "tick": 25,
+    "step": 1,
+    "text": "Scanline intensity",
     "type": "slider",
     "value": 40
   },

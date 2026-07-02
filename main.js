@@ -71,6 +71,17 @@ let warpDetail = 40 // pulse duration: longer = slower, springier contract/relea
 let warpRipples = [] // active pulses: { f: age frames, strength: 0..1 }
 let warpActive = false // is the GL overlay currently shown (source hidden)
 
+// Glitch rack (all rendered in the same GL overlay as warp)
+let rgbSplitEnabled = false
+let rgbSplitAmount = 50 // chromatic-aberration strength on loud hits
+let sliceGlitchEnabled = false
+let sliceGlitchAmount = 50 // how far slice bands jump on a beat
+let scanlinesEnabled = false
+let scanlineAmount = 40 // scanline/VHS darkening intensity
+let aberrLevel = 0 // current (decaying) aberration in px
+let sliceLevel = 0 // current (decaying) slice shift in px
+let glitchSeed = 0 // reshuffled each beat so slice bands change
+
 let beatEnergyAvg = 0 // slow rolling loudness baseline for beat detection
 let beatCooldownFrames = 0 // min-gap counter so one beat doesn't double-trigger
 let shakeImpulse = 0 // decaying beat-shake magnitude
@@ -119,19 +130,49 @@ precision highp float;
 uniform sampler2D u_tex;
 uniform vec2 u_res;
 uniform vec2 u_center;
-uniform float u_k;       // pinch strength: >0 suck toward center, <0 bulge out
+uniform float u_k;       // warp pinch: >0 suck toward center, <0 bulge out
 uniform float u_radius;  // px radius over which the pinch fades to nothing
+uniform float u_aberr;   // chromatic aberration: px the R/B channels split by
+uniform float u_slice;   // slice glitch: max px a horizontal band shifts sideways
+uniform float u_seed;    // reshuffles the slice bands (bumped each beat)
+uniform float u_scan;    // scanline/VHS darkening, 0..1
 varying vec2 v_uv;
+float hash(float n) { return fract(sin(n) * 43758.5453); }
 void main() {
   // Pixel coord with top-left origin (matches u_center = visualizer center)
   vec2 px = vec2(v_uv.x * u_res.x, (1.0 - v_uv.y) * u_res.y);
+  // Warp pinch: scale the lookup radially, weighted toward the center.
   vec2 d = px - u_center;
   float r = length(d);
   float nr = r / u_radius;
   float bump = exp(-nr * nr * 2.0);      // 1 at center, ~0 by u_radius
   float srcR = r * (1.0 + u_k * bump);   // sample farther out near center = suck in
   vec2 src = u_center + (d / max(r, 0.0001)) * srcR;
-  gl_FragColor = texture2D(u_tex, src / u_res);
+  // Slice glitch: nudge whole ~24px horizontal bands sideways at random.
+  if (u_slice > 0.0) {
+    float band = floor(src.y / 24.0);
+    if (hash(band * 1.7 + u_seed) > 0.6) {
+      src.x += (hash(band * 3.1 + u_seed) - 0.5) * u_slice;
+    }
+  }
+  vec2 uv = src / u_res;
+  // Chromatic aberration: pull the red/blue channels apart horizontally.
+  vec4 col;
+  if (u_aberr > 0.0) {
+    vec2 o = vec2(u_aberr / u_res.x, 0.0);
+    col = vec4(texture2D(u_tex, uv + o).r,
+               texture2D(u_tex, uv).g,
+               texture2D(u_tex, uv - o).b,
+               texture2D(u_tex, uv).a);
+  } else {
+    col = texture2D(u_tex, uv);
+  }
+  // Scanlines: darken alternating rows for a VHS/CRT feel.
+  if (u_scan > 0.0) {
+    float lines = 0.5 + 0.5 * sin(px.y * 2.0943); // ~3px period
+    col.rgb *= mix(1.0, lines, u_scan);
+  }
+  gl_FragColor = col;
 }`
 
 function compileShader(type, src) {
@@ -176,6 +217,10 @@ function initWarpGL() {
     center: gl.getUniformLocation(glProg, "u_center"),
     k: gl.getUniformLocation(glProg, "u_k"),
     radius: gl.getUniformLocation(glProg, "u_radius"),
+    aberr: gl.getUniformLocation(glProg, "u_aberr"),
+    slice: gl.getUniformLocation(glProg, "u_slice"),
+    seed: gl.getUniformLocation(glProg, "u_seed"),
+    scan: gl.getUniformLocation(glProg, "u_scan"),
   }
   glQuad = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, glQuad)
@@ -200,7 +245,7 @@ function setWarpActive(on) {
   canvas.style.visibility = on ? "hidden" : "visible"
 }
 
-function renderWarp(cx, cy, k, radius) {
+function renderWarp(cx, cy, k, radius, aberr, slice, seed, scan) {
   gl.viewport(0, 0, glcanvas.width, glcanvas.height)
   gl.clearColor(0, 0, 0, 0)
   gl.clear(gl.COLOR_BUFFER_BIT)
@@ -216,6 +261,10 @@ function renderWarp(cx, cy, k, radius) {
   gl.uniform2f(glLoc.center, cx, cy)
   gl.uniform1f(glLoc.k, k)
   gl.uniform1f(glLoc.radius, radius)
+  gl.uniform1f(glLoc.aberr, aberr)
+  gl.uniform1f(glLoc.slice, slice)
+  gl.uniform1f(glLoc.seed, seed)
+  gl.uniform1f(glLoc.scan, scan)
 
   gl.bindBuffer(gl.ARRAY_BUFFER, glQuad)
   gl.enableVertexAttribArray(glLoc.pos)
@@ -654,6 +703,16 @@ function livelyAudioListener(audioArray) {
     yPos += (Math.random() - 0.5) * amt
   }
 
+  // Beat zoom: the background swells on a beat, then eases back to normal.
+  if (beatZoomEnabled) {
+    if (isBeat) bgZoom = Math.max(bgZoom, 1 + (beatZoomAmount / 100) * 0.15 * flashK)
+    bgZoom += (1 - bgZoom) * 0.15 // decay toward rest
+    bgWrapper.style.transform = `scale(${bgZoom.toFixed(4)})`
+  } else if (bgZoom !== 1) {
+    bgZoom = 1
+    bgWrapper.style.transform = ""
+  }
+
   // Logo center image location — positioned independently of the visualizer
   // (its own X/Y sliders), so it no longer follows the ring or the shake.
   if (middle.style.display != "none") {
@@ -737,33 +796,58 @@ function livelyAudioListener(audioArray) {
     }
   }
 
-  // --- Warp (GPU): beat-driven contract-then-release from the center ---------
-  // Each beat spawns a pulse. A pulse's contraction follows one damped sine
-  // cycle: it dips in (implode), swings back out past rest (overshoot), then
-  // settles. We sum the active pulses into a single radial scale and, while
-  // that's non-zero, render the scaled result on the GL overlay; once every
-  // pulse has settled we drop back to the crisp 2D canvas so warp costs
-  // nothing between beats.
-  if (warpEnabled && gl) {
-    let period = 3.5 + (warpDetail / 100) * 10 // pulse length in frames (~0.06–0.22s), very snappy
-    let contractAmp = (warpAmount / 100) * 0.9 // max suck-in strength near the center
-    let expandAmp = 0.17 // max bulge-out ≈ 20% bigger than original
+  // --- Warp + glitch (GPU) ---------------------------------------------------
+  // Warp (beat-driven contract/release pinch) and the glitch rack (chromatic
+  // aberration, slice glitch, scanlines) all run through one GL overlay: the
+  // crisp 2D canvas is uploaded as a texture and the fragment shader applies
+  // whatever's active. While any effect is live we show the overlay (hiding the
+  // 2D canvas); when everything's idle we drop back to the plain canvas so this
+  // costs nothing.
+  if (gl) {
     let radius = Math.hypot(ctx.canvas.width, ctx.canvas.height) * 0.5 // pinch reach
-    let k = 0 // total pinch: >0 suck toward center, <0 bulge back out
-    for (let i = warpRipples.length - 1; i >= 0; i--) {
-      let p = warpRipples[i]
-      let t = p.f / period // normalized age (1 = one full pulse)
-      // One full sine cycle: first half sucks in (contract), second half bulges
-      // back out past rest (expand), both snapping to zero. Contract and expand
-      // get separate amplitudes so the pull is strong but the bulge is modest.
-      let s = Math.sin(2 * Math.PI * t)
-      k += p.strength * (s >= 0 ? contractAmp * s : expandAmp * s)
-      p.f++
-      if (t >= 1) warpRipples.splice(i, 1) // pulse complete
+
+    // Warp pinch: sum the active contract/release pulses into one factor.
+    let k = 0 // >0 suck toward center, <0 bulge back out
+    if (warpEnabled) {
+      let period = 3.5 + (warpDetail / 100) * 10 // pulse length in frames (~0.06–0.22s)
+      let contractAmp = (warpAmount / 100) * 0.9 // max suck-in strength near the center
+      let expandAmp = 0.17 // max bulge-out ≈ 20% bigger than original
+      for (let i = warpRipples.length - 1; i >= 0; i--) {
+        let p = warpRipples[i]
+        let t = p.f / period // normalized age (1 = one full pulse)
+        let s = Math.sin(2 * Math.PI * t)
+        k += p.strength * (s >= 0 ? contractAmp * s : expandAmp * s)
+        p.f++
+        if (t >= 1) warpRipples.splice(i, 1)
+      }
+    } else if (warpRipples.length) {
+      warpRipples.length = 0
     }
-    if (Math.abs(k) > 0.001) {
+
+    // Chromatic aberration: split scales with loudness, spikes on beats.
+    if (rgbSplitEnabled) {
+      let target = (rgbSplitAmount / 100) * 42 * flashK * Math.min(1, average * 5)
+      if (isBeat) target = Math.max(target, (rgbSplitAmount / 100) * 42 * flashK)
+      aberrLevel += (target - aberrLevel) * 0.4
+    } else {
+      aberrLevel = 0
+    }
+
+    // Slice glitch: a burst on each beat that decays over a few frames.
+    if (sliceGlitchEnabled && isBeat) {
+      sliceLevel = (sliceGlitchAmount / 100) * 240 * flashK
+      glitchSeed = Math.random() * 1000
+    }
+    sliceLevel *= 0.8
+    if (!sliceGlitchEnabled) sliceLevel = 0
+
+    let scanInt = scanlinesEnabled ? scanlineAmount / 100 : 0
+
+    let warpOn = Math.abs(k) > 0.001
+    let glitchOn = aberrLevel > 0.1 || sliceLevel > 0.1 || scanInt > 0.001
+    if (warpOn || glitchOn) {
       setWarpActive(true)
-      renderWarp(xPos, yPos, Math.min(3, k), radius)
+      renderWarp(xPos, yPos, warpOn ? Math.min(3, k) : 0, radius, aberrLevel, sliceLevel, glitchSeed, scanInt)
     } else {
       setWarpActive(false)
     }
@@ -781,6 +865,11 @@ let slideshowFade = 2 // seconds
 let slideshowTimer = null
 let playlist = [] // array of relative paths like "images/foo.jpg"
 let playIndex = 0
+
+// Batch 6: background extras
+let beatZoomEnabled = false
+let beatZoomAmount = 40 // how hard the background pulses on a beat
+let bgZoom = 1 // current (decaying) background scale
 
 function applyBgBlur(px) {
   bgWrapper.style.filter = `blur(${Math.round(px)}px)`
@@ -906,6 +995,12 @@ function livelyPropertyListener(name, val) {
     case "bgBlur":
       applyBgBlur(val)
       break
+    case "beatZoomEnabled":
+      beatZoomEnabled = val
+      break
+    case "beatZoomAmount":
+      beatZoomAmount = val
+      break
     case "slideshowEnabled":
       slideshowEnabled = val
       refreshSlideshowState()
@@ -998,6 +1093,29 @@ function livelyPropertyListener(name, val) {
       break
     case "warpDetail":
       warpDetail = val
+      break
+    case "rgbSplitEnabled":
+      rgbSplitEnabled = val
+      if (rgbSplitEnabled) initWarpGL()
+      else aberrLevel = 0
+      break
+    case "rgbSplitAmount":
+      rgbSplitAmount = val
+      break
+    case "sliceGlitchEnabled":
+      sliceGlitchEnabled = val
+      if (sliceGlitchEnabled) initWarpGL()
+      else sliceLevel = 0
+      break
+    case "sliceGlitchAmount":
+      sliceGlitchAmount = val
+      break
+    case "scanlinesEnabled":
+      scanlinesEnabled = val
+      if (scanlinesEnabled) initWarpGL()
+      break
+    case "scanlineAmount":
+      scanlineAmount = val
       break
     case "barCompensation":
       compensation = val

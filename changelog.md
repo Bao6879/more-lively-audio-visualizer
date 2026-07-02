@@ -5,6 +5,19 @@ of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-a
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
 
+## [0.6.0]: 2026-07-02
+### Added: Background extras, part 1 (Customize → "Background extras:")
+First slice of Batch 6.
+- **Beat zoom** checkbox + **Beat zoom strength** slider: the background image
+  layer swells on each detected beat and eases back to rest. Respects **Reduce
+  flashing**, which damps the swell.
+
+### Fixed
+- **Background dim** now actually works.
+
+### Changed
+- Tripled the ceiling on the glitch effects: **RGB split** and **Slice glitch**
+
 ## [0.5.0]: 2026-07-02
 ### Added: Warp on beat (Customize → "Warp & glitch (heavy):")
 - **Warp: contract/release on beat (GPU)** checkbox: each detected beat fires a
