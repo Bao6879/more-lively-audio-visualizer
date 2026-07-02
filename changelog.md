@@ -4,6 +4,25 @@ All notable changes to this fork are documented here. This is an extended fork
 of [elias123tre/lively-audio-visualizer](https://github.com/elias123tre/lively-audio-visualizer),
 a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively).
 
+## [0.8.0]: 2026-07-02
+### Added
+- **Author's choice (heavy)** preset: my maxed-out look (8-way
+  kaleidoscope, fat volume-reactive bars, warp + RGB split + slice glitch + beat
+  flash + shockwave, background & star beat reactions). Deliberately heavy. **MASSIVE EPILEPSY WARNING**.
+- **Author's choice (chill)** preset: my own laid-back look
+  (edge-mirrored bottom bars, rainbow cycle, peak caps, gentle background tilt).
+
+### Changed
+- **Rounded bars is now OFF by default.** Round line caps get expensive when the
+  bars are wide and glow is high.
+
+### Fixed
+- **Peak fly-off now works with Kaleidoscope.** they now spawn from every wedge and radiate symmetrically like the
+  bars do.
+
+### Added: Genre presets (Batch 8, part 1)
+- **Preset** dropdown (Customize → top, "PRESETS"): one click sets a whole look!
+
 ## [0.7.2]: 2026-07-02
 ### Changed: Beat reactions reworked
 - **Background reactions are now four independent checkboxes** (Shake / Tilt /

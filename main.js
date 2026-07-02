@@ -447,10 +447,12 @@ function drawCircle(spectrum, xPos, yPos, innerRadius, maxLength) {
       ctx.lineTo(0, outer)
       ctx.stroke()
 
-      // Peak fly-off: spawn once per band (segment 0 only) at the bar tip,
-      // heading radially outward. sideIdx maps the mirrored ring index back to
-      // the single-sided spectrum/flyTrigger index.
-      if (peakFlyOff && s === 0) {
+      // Peak fly-off: spawn from the bar tip heading radially outward. Spawn in
+      // EVERY kaleidoscope wedge (not just segment 0) so streaks radiate from all
+      // the mirrored bars — otherwise they'd all launch from one direction.
+      // sideIdx maps the mirrored ring index back to the single-sided
+      // spectrum/flyTrigger index.
+      if (peakFlyOff) {
         let sideIdx = index < arr.length / 2 ? Math.floor(arr.length / 2) - 1 - index : index - Math.floor(arr.length / 2)
         if (flyTrigger[sideIdx]) {
           let th = segBase + a * segAngle
@@ -1245,9 +1247,153 @@ function refreshSlideshowState() {
   }
 }
 
+// ----------------------------------------------------------------------------
+// Batch 8: genre / listener-type presets. Each preset is applied by replaying a
+// bundle of property values through livelyPropertyListener — that reuses every
+// existing side-effect (GL bring-up for warp/glitch, the dim overlay, starfield
+// filter, etc.) with no duplication. Lively's property channel is one-way, so
+// this can't move the panel sliders; it sets the look directly and the user can
+// still fine-tune any single control afterward.
+//
+// Each preset is `{ ...PRESET_BASE, ...overrides }` so it sets *most* of the
+// look at once and switching presets fully re-themes (no leftovers from a prior
+// vibe or from the user's slider tweaks). PRESET_BASE is a neutral, effects-off
+// baseline. Deliberately NOT touched by presets: reduceFlashing (accessibility),
+// visualizer position, shadow, and content (background image/slideshow/video,
+// center image) — those stay whatever the user set.
+const PRESET_BASE = {
+  vizMode: 0, symmetry: 0, edgeMirror: 0,
+  colorMode: 0, rainbowSpeed: 30, startHue: 206, endHue: 170, saturation: 50, lightness: 50, barGradient: false,
+  barCount: 128, maxLength: 100, barWidth: 30, barGlow: 10, roundedBars: true, innerRadius: 50, innerMovement: 25, barCompensation: 25,
+  smoothing: 40, rotationSpeed: 0, beatPulse: 0, autoHideThreshold: 0,
+  beatSensitivity: 50, bassIsolation: 0, beatShake: 0, beatTeleport: false,
+  shockwave: false, shockwaveShape: 0, shockwaveOrigin: 0, shockwaveThickness: 3, shockwaveDuration: 40, shockwaveSpeed: 40,
+  beatFlashEnabled: false, beatFlashColor: "#FFFFFF", beatFlashStrength: 60,
+  warpEnabled: false, warpAmount: 40, warpDetail: 40,
+  rgbSplitEnabled: false, rgbSplitAmount: 50, sliceGlitchEnabled: false, sliceGlitchAmount: 50, scanlinesEnabled: false, scanlineAmount: 40,
+  peakCaps: false, peakGravity: 10, peakFlyOff: false, peakFlySensitivity: 50, peakFlySpeed: 50,
+  bgDim: 0, bgBlur: 0,
+  showStars: true, starColor: "#FFFFFF", starOpacity: 35, starGlow: 15, starBlur: 10,
+  bgBeatShake: false, bgBeatTilt: false, bgBeatBlur: false, bgBeatZoom: false, bgBeatStrength: 50, bgReactThreshold: 80,
+  starBeatEnabled: false, starBeatStrength: 50, starBeatVibrate: false,
+  shakeSpeed: 50, shakeRadius: 15,
+}
+
+// Index 0 is "Custom" (no-op); 1..N line up with the dropdown items below.
+const PRESETS = [
+  null, // 0 = Custom (use sliders): apply nothing
+  { // 1 = Chill / Lo-fi — Lofi Girl / Chillhop: calm filled area, warm & muted, soft
+    ...PRESET_BASE, vizMode: 4, startHue: 30, endHue: 330, saturation: 38, lightness: 60,
+    yPercent: 100, // sit the filled area on the very bottom of the screen
+    barGradient: true, barGlow: 7, innerRadius: 48, barCompensation: 35, smoothing: 74, rotationSpeed: 3,
+    beatPulse: 6, shakeRadius: 8, bgDim: 35, bgBlur: 4,
+    starColor: "#FFE0B0", starOpacity: 22, starGlow: 9, starBlur: 9,
+    bgBeatTilt: true, bgBeatStrength: 28, bgReactThreshold: 85,
+  },
+  { // 2 = Chillstep — Seeking Blue / MrSuicideSheep: melodic circle, cool teal/aqua, peak caps
+    // (teal→cyan, kept clear of Synthwave's magenta→cyan sweep so the two don't read alike)
+    ...PRESET_BASE, vizMode: 0, startHue: 165, endHue: 200, saturation: 66, lightness: 58,
+    barGradient: true, barWidth: 35, barGlow: 16, innerRadius: 46, innerMovement: 35, smoothing: 55, rotationSpeed: 6,
+    beatPulse: 18, peakCaps: true, peakGravity: 8,
+    shockwave: true, shockwaveShape: 0, shockwaveThickness: 2, shockwaveSpeed: 35,
+    bgDim: 30, starColor: "#7FEAD8", starOpacity: 35, starGlow: 16,
+    starBeatEnabled: true, starBeatStrength: 35, bgBeatTilt: true, bgBeatStrength: 25,
+  },
+  { // 3 = House / DJ — steady club groove: mirrored bars, rainbow cycle, bg zoom on beat
+    ...PRESET_BASE, vizMode: 2, colorMode: 1, rainbowSpeed: 40, saturation: 80, lightness: 55,
+    barWidth: 45, barGlow: 14, smoothing: 35, beatPulse: 30, beatSensitivity: 60, beatShake: 25,
+    shockwave: true, shockwaveShape: 1, shockwaveOrigin: 2, shockwaveSpeed: 45,
+    bgBeatZoom: true, bgBeatStrength: 45, bgDim: 25, showStars: false,
+  },
+  { // 4 = EDM / Festival — Monstercat energy: kaleidoscope ring, rainbow, glow, flash
+    ...PRESET_BASE, vizMode: 0, symmetry: 3, colorMode: 1, rainbowSpeed: 55, saturation: 90, lightness: 55,
+    barWidth: 38, barGlow: 20, innerRadius: 44, innerMovement: 40, beatPulse: 35, beatSensitivity: 60,
+    shockwave: true, shockwaveShape: 0, shockwaveSpeed: 55, rotationSpeed: 10,
+    beatFlashEnabled: true, beatFlashColor: "#39FFEE", beatFlashStrength: 30,
+    starBeatEnabled: true, starBeatStrength: 45, bgBeatZoom: true, bgBeatStrength: 40,
+    bgDim: 35, starOpacity: 45,
+  },
+  { // 5 = Dubstep — Trap Nation / UKF: hot red, bass-driven shake + warp + RGB split + flash
+    ...PRESET_BASE, vizMode: 0, startHue: 22, endHue: 0, saturation: 100, lightness: 52,
+    barWidth: 60, barGlow: 18, roundedBars: false, innerRadius: 42, innerMovement: 45, smoothing: 28,
+    beatPulse: 42, beatSensitivity: 72, bassIsolation: 82, beatShake: 75,
+    shockwave: true, shockwaveShape: 0, shockwaveThickness: 5, shockwaveSpeed: 65,
+    warpEnabled: true, warpAmount: 62, warpDetail: 45, rgbSplitEnabled: true, rgbSplitAmount: 58,
+    beatFlashEnabled: true, beatFlashColor: "#FF3010", beatFlashStrength: 42,
+    peakFlyOff: true, peakFlySensitivity: 60, peakFlySpeed: 60,
+    bgBeatShake: true, bgBeatStrength: 55, bgReactThreshold: 75, bgDim: 30, showStars: false,
+  },
+  { // 6 = Trap — cleaner bass: purple→teal ring, peak caps, shockwave rings, bg zoom
+    ...PRESET_BASE, vizMode: 0, startHue: 280, endHue: 180, saturation: 85, lightness: 55,
+    barWidth: 48, barGlow: 16, innerRadius: 45, innerMovement: 38, smoothing: 38,
+    beatPulse: 34, beatSensitivity: 66, bassIsolation: 60, beatShake: 35,
+    shockwave: true, shockwaveShape: 0, shockwaveSpeed: 48, peakCaps: true, peakGravity: 14,
+    beatFlashEnabled: true, beatFlashColor: "#B060FF", beatFlashStrength: 28,
+    starBeatEnabled: true, starBeatStrength: 40, bgBeatZoom: true, bgBeatStrength: 40,
+    bgDim: 35, starColor: "#C79BFF", starOpacity: 38,
+  },
+  { // 7 = Hardstyle — aggressive: red mirrored bars, scanlines + slice glitch, screen shake
+    ...PRESET_BASE, vizMode: 2, startHue: 0, endHue: 0, saturation: 95, lightness: 60,
+    barWidth: 40, barGlow: 14, roundedBars: false, smoothing: 22, beatPulse: 30,
+    beatSensitivity: 78, bassIsolation: 55, beatShake: 60,
+    shockwave: true, shockwaveShape: 1, shockwaveSpeed: 60,
+    scanlinesEnabled: true, scanlineAmount: 35, sliceGlitchEnabled: true, sliceGlitchAmount: 60,
+    beatFlashEnabled: true, beatFlashColor: "#FF2040", beatFlashStrength: 40,
+    bgBeatShake: true, bgBeatStrength: 60, bgReactThreshold: 70, bgDim: 20, showStars: false,
+  },
+  { // 8 = Synthwave — neon magenta→cyan ring, glow, slow spin, CRT scanlines
+    ...PRESET_BASE, vizMode: 0, startHue: 300, endHue: 190, saturation: 92, lightness: 56,
+    barGradient: true, barWidth: 40, barGlow: 22, innerRadius: 45, innerMovement: 30, smoothing: 45,
+    rotationSpeed: 12, beatPulse: 22, shockwave: true, shockwaveShape: 0, shockwaveSpeed: 40,
+    scanlinesEnabled: true, scanlineAmount: 28,
+    starColor: "#B36BFF", starOpacity: 40, starGlow: 18, bgDim: 45, bgBeatTilt: true, bgBeatStrength: 25,
+  },
+  { // 9 = Minimal — thin near-white bottom bars, low glow, nothing flashy
+    ...PRESET_BASE, vizMode: 1, saturation: 0, lightness: 90, barWidth: 12, barGlow: 2,
+    yPercent: 100, // sit the bottom bars on the very bottom of the screen
+    innerRadius: 50, smoothing: 50, shakeRadius: 0, showStars: false, bgDim: 0,
+  },
+  { // 10 = Author's choice (heavy) — owner's own maxed-out look: 8-way kaleidoscope,
+    // fat volume-reactive bars, warp + RGB split + slice glitch + beat flash, the works.
+    // Captured from the owner's live sliders. Heavy on purpose.
+    ...PRESET_BASE, vizMode: 0, symmetry: 5, colorMode: 2, endHue: 100,
+    barCount: 120, barWidth: 150, barGlow: 25, roundedBars: false, innerRadius: 30,
+    peakFlyOff: true, peakFlySensitivity: 60, peakFlySpeed: 100,
+    rotationSpeed: 50, beatPulse: 40, shakeSpeed: 100, shakeRadius: 50,
+    beatSensitivity: 60, bassIsolation: 70, beatShake: 100, beatTeleport: true,
+    beatFlashEnabled: true, beatFlashColor: "#CC2711",
+    shockwave: true, shockwaveOrigin: 9, shockwaveThickness: 20, shockwaveDuration: 0, shockwaveSpeed: 100,
+    warpEnabled: true, warpAmount: 60, warpDetail: 20,
+    rgbSplitEnabled: true, rgbSplitAmount: 100, sliceGlitchEnabled: true,
+    bgDim: 20, bgBlur: 2,
+    bgBeatShake: true, bgBeatTilt: true, bgBeatBlur: true, bgBeatZoom: true,
+    starBeatEnabled: true, starBeatStrength: 70,
+  },
+  { // 11 = Author's choice (chill) — owner's own laid-back look: edge-mirrored
+    // bottom bars, rainbow cycle, peak caps, gentle background tilt. Captured
+    // from the owner's live sliders.
+    ...PRESET_BASE, vizMode: 1, edgeMirror: 1, colorMode: 1,
+    barCount: 190, barWidth: 45, barGlow: 25, innerRadius: 30,
+    peakCaps: true, peakGravity: 24,
+    bgDim: 10, bgBlur: 3, bgBeatTilt: true, bgBeatStrength: 30,
+  },
+]
+
+function applyPreset(idx) {
+  const bundle = PRESETS[idx]
+  if (!bundle) return // 0 / Custom / out of range: leave the sliders in charge
+  for (const key in bundle) livelyPropertyListener(key, bundle[key])
+}
+
 function livelyPropertyListener(name, val) {
   // debug.textContent += `Name: ${name} Val: ${val}`
   switch (name) {
+    case "preset":
+      // Defer so it applies AFTER the rest of the startup property burst (whose
+      // order isn't guaranteed), otherwise saved slider values could clobber a
+      // saved preset on reload. Instant enough when picked at runtime.
+      setTimeout(() => applyPreset(Math.round(Number(val)) || 0), 60)
+      break
     case "innerRadius":
       innerPercent = val
       // Logo image width & height

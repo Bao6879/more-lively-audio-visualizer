@@ -1,4 +1,27 @@
 {
+  "grpPresets": {
+    "type": "label",
+    "value": "══════  PRESETS  ══════"
+  },
+  "preset": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Preset (sets a whole look; sliders still fine-tune)",
+    "items": [
+      "— Custom (use sliders) —",
+      "Chill / Lo-fi",
+      "Chillstep",
+      "House / DJ",
+      "EDM / Festival",
+      "Dubstep",
+      "Trap",
+      "Hardstyle",
+      "Synthwave",
+      "Minimal",
+      "Author's choice (heavy)",
+      "Author's choice (chill)"
+    ]
+  },
   "grpVisualizer": {
     "type": "label",
     "value": "══════  VISUALIZER  ══════"
@@ -94,8 +117,8 @@
   },
   "roundedBars": {
     "type": "checkbox",
-    "value": true,
-    "text": "Rounded bars"
+    "value": false,
+    "text": "Rounded bars (heavier — big glow/width can slow down)"
   },
   "barCompensation": {
     "max": 100,
