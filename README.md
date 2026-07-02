@@ -1,16 +1,14 @@
 # Extended Audio Visualizer
 
 An audio visualizer for [Lively Wallpaper](https://github.com/rocksdanister/lively),
-the free Wallpaper Engine alternative. It reacts to whatever you're playing —
+the free Wallpaper Engine alternative. It reacts to whatever you're playing:
 circular spectrum, bars, warp and glitch, beat flashes, reactive backgrounds,
 and a bunch of one-click genre presets. You can still touch the sliders to get your own version though.
 
 This is a fork of
 [eliasfloreteng/lively-audio-visualizer](https://github.com/eliasfloreteng/lively-audio-visualizer). I liked the idea and I wanted more, so I roughly
 doubled what it can do, and finished the original author's own to-do list along
-the way — every "upcoming feature" he'd noted (more visualizer types, smoother
-motion, music-reactive scale, a silence threshold, video backgrounds) is in
-here now. Big thanks to elias for the groundwork; see [Credits](#credits).
+the way! Big thanks to elias for the groundwork; see [Credits](#credits).
 
 https://github.com/user-attachments/assets/7af38000-2557-4e41-b12e-1bf90cb0e8b1
 
@@ -47,13 +45,13 @@ a bass/kick focus) that drives screen shake, teleport-on-beat, a full-screen
 beat flash, peak caps and fly-off streaks, and shockwaves you can shape
 (ring or line, ten different origins, adjustable thickness/duration/speed).
 
-**Warp & glitch** *(heavy — runs on the GPU)*: A beat-driven warp/pinch, RGB
+**Warp & glitch** *(runs on the GPU)*: A beat-driven warp/pinch, RGB
 split, slice glitch, and scanlines/VHS. They all share one WebGL pass, so
 stacking them doesn't cost extra.
 
 **Backgrounds**: A static image with blur and dim, a slideshow that cycles your
 `images/` folder (shuffle + crossfade), or a looping video background (heavy).
-The background can react to the beat too — shake, tilt, blur pulse, zoom, in any
+The background can react to the beat too: shake, tilt, blur pulse, zoom, in any
 combination. And there's the starfield behind everything, which can speed up on
 the beat if you want. *(Background and star beat reactions are an idea I borrowed
 from [OBLVIION](https://github.com/OBLVIION/lively-audio-visualizer-background-reaction_custom-settings), credits to them.)*
@@ -69,9 +67,6 @@ Synthwave, or Minimal. There's also 2 that I use personally at the bottom. Do ke
 nudge any slider afterward.
 
 ## Examples (These are presets!)
-
-The hero clip above is the **Author's choice (chill)** preset. Here's the other
-one I run — **Author's choice (heavy)**, going full tilt:
 
 > **Photosensitivity warning:** this clip has flashing lights, strobing and
 > rapid glitch effects. Turn on **Reduce flashing** in Customize to remove the strobe.
@@ -99,7 +94,7 @@ You then need to pick **Open File Location**, then run generate-playlist.bat so 
 ## Notes:
 
 There's a **Reduce flashing** checkbox that turns off (or damps) the strobe-y
-stuff — beat flash, shake, shockwave, glitch. Rapid flashing can be a problem for
+stuff: beat flash, shake, shockwave, glitch. Rapid flashing can be a problem for
 photosensitive epilepsy, so if that's a concern for you or whoever's watching,
 leave it on. 
 
