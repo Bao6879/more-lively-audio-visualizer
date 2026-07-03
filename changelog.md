@@ -46,8 +46,8 @@ a circular audio-spectrum visualizer for [Lively Wallpaper](https://github.com/r
 - **Customize panel reorganized.**
 
 ## [0.7.1]: 2026-07-02
-### Added: Beat reactions, idea by OBLIVIION (Batch 7 complete)
-Two beat reactions borrowed from OBLIVIION's fork, credited in the Customize
+### Added: Beat reactions, idea by OBLVIION (Batch 7 complete)
+Two beat reactions borrowed from OBLVIION's fork, credited in the Customize
 panel at the controls. Will be credited with links in the readme when that's done.
 - **Background beat reactions** (Customize → "Background extras:"): a
   **Background reacts on beat** checkbox, a **Background reaction** dropdown

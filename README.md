@@ -12,6 +12,8 @@ the way! Big thanks to elias for the groundwork; see [Credits](#credits).
 
 https://github.com/user-attachments/assets/7af38000-2557-4e41-b12e-1bf90cb0e8b1
 
+▶ **Watch in HD on YouTube:** https://youtu.be/TSgfMyCYAcc
+
 ```
 Track: Disfigure - Blank [NCS Release]
 Music provided by NoCopyrightSounds.
@@ -73,6 +75,8 @@ nudge any slider afterward.
 
 https://github.com/user-attachments/assets/3ec64885-e526-424f-b4f6-bc7d9f770486
 
+▶ **Watch in HD on YouTube:** https://youtu.be/6AJrIOmLz98
+
 ```
 Track: Desmeon - Back From The Dead [NCS Release]
 
@@ -101,7 +105,7 @@ leave it on.
 The GPU-heavy effects are labeled **(heavy)** next to their
 controls.
 
-The videos here will look a bit funky. Github upload size limits, you know.
+The clips embedded here are compressed to fit GitHub's upload size limits, so they look a bit rough. Watch the HD versions on YouTube (linked under each clip) to get the full effect.
 
 The rounded bars can lag out the visualizer if you run with a lot of bars (especially kaleidoscope). I've defaulted them to off.
 
